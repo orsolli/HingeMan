@@ -112,7 +112,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!114 &75896229
+--- !u!114 &45447108
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -120,88 +120,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   broadcast: 1
-  continuousPlayerActions:
-  - key: 8
-    index: 0
-    value: -1
-  - key: 8
-    index: 1
-    value: -1
-  - key: 8
-    index: 2
-    value: -1
-  - key: 8
-    index: 3
-    value: -1
-  - key: 8
-    index: 4
-    value: -1
-  - key: 8
-    index: 5
-    value: -1
-  - key: 8
-    index: 6
-    value: -1
-  - key: 8
-    index: 7
-    value: -1
-  - key: 9
-    index: 8
-    value: 1
-  - key: 9
-    index: 9
-    value: 1
-  - key: 9
-    index: 10
-    value: 1
-  - key: 9
-    index: 11
-    value: 1
-  - key: 9
-    index: 12
-    value: 1
-  - key: 9
-    index: 13
-    value: 1
-  - key: 9
-    index: 14
-    value: 1
-  - key: 9
-    index: 15
-    value: 1
-  discretePlayerActions: []
-  defaultAction: 0
-  brain: {fileID: 393360180}
---- !u!114 &267662944
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  broadcast: 1
-  graphModel: {fileID: 4900000, guid: d2213af4e8f3e4c5189a9de24b5e02d3, type: 3}
-  graphScope: 
-  graphPlaceholders:
-  - name: epsilon
-    valueType: 1
-    minValue: -1
-    maxValue: 1
-  BatchSizePlaceholderName: batch_size
-  StatePlacholderName: state
-  RecurrentInPlaceholderName: recurrent_in
-  RecurrentOutPlaceholderName: recurrent_out
-  ObservationPlaceholderName: []
-  ActionPlaceholderName: action
-  brain: {fileID: 393360180}
+  brain: {fileID: 0}
 --- !u!1 &393360178
 GameObject:
   m_ObjectHideFlags: 0
@@ -274,14 +197,19 @@ MonoBehaviour:
     - 
     actionSpaceType: 1
     stateSpaceType: 1
-  brainType: 3
+  brainType: 2
   CoreBrains:
-  - {fileID: 75896229}
-  - {fileID: 652248291}
-  - {fileID: 1076316417}
-  - {fileID: 267662944}
-  instanceID: 10446
---- !u!114 &652248291
+  - {fileID: 701644864}
+  - {fileID: 45447108}
+  - {fileID: 896954439}
+  - {fileID: 2014160803}
+  instanceID: 11942
+--- !u!4 &653635391 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 4265541450265096, guid: 354f330e1f8eb42058362f92fb1f1867,
+    type: 2}
+  m_PrefabInternal: {fileID: 773820226}
+--- !u!114 &701644864
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -289,16 +217,62 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 943466ab374444748a364f9d6c3e2fe2, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_Script: {fileID: 11500000, guid: 41e9bda8f3cf1492fa74926a530f6f70, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
   m_EditorClassIdentifier: 
   broadcast: 1
-  brain: {fileID: 0}
---- !u!4 &653635391 stripped
-Transform:
-  m_PrefabParentObject: {fileID: 4265541450265096, guid: 354f330e1f8eb42058362f92fb1f1867,
-    type: 2}
-  m_PrefabInternal: {fileID: 773820226}
+  continuousPlayerActions:
+  - key: 8
+    index: 0
+    value: -1
+  - key: 8
+    index: 1
+    value: -1
+  - key: 8
+    index: 2
+    value: -1
+  - key: 8
+    index: 3
+    value: -1
+  - key: 8
+    index: 4
+    value: -1
+  - key: 8
+    index: 5
+    value: -1
+  - key: 8
+    index: 6
+    value: -1
+  - key: 8
+    index: 7
+    value: -1
+  - key: 9
+    index: 8
+    value: 1
+  - key: 9
+    index: 9
+    value: 1
+  - key: 9
+    index: 10
+    value: 1
+  - key: 9
+    index: 11
+    value: 1
+  - key: 9
+    index: 12
+    value: 1
+  - key: 9
+    index: 13
+    value: 1
+  - key: 9
+    index: 14
+    value: 1
+  - key: 9
+    index: 15
+    value: 1
+  discretePlayerActions: []
+  defaultAction: 0
+  brain: {fileID: 393360180}
 --- !u!1001 &773820226
 Prefab:
   m_ObjectHideFlags: 0
@@ -347,11 +321,6 @@ Prefab:
       propertyPath: m_Name
       value: Spider
       objectReference: {fileID: 0}
-    - target: {fileID: 23357937045337954, guid: 354f330e1f8eb42058362f92fb1f1867,
-        type: 2}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: a56f2e33aa8024964bbd54501f14cbbc, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 354f330e1f8eb42058362f92fb1f1867, type: 2}
   m_IsPrefabParent: 0
@@ -439,6 +408,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &896954439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  brain: {fileID: 393360180}
 --- !u!1001 &973885488
 Prefab:
   m_ObjectHideFlags: 0
@@ -534,18 +515,6 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 354f330e1f8eb42058362f92fb1f1867, type: 2}
   m_IsPrefabParent: 0
---- !u!114 &1076316417
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35813a1be64e144f887d7d5f15b963fa, type: 3}
-  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
-  m_EditorClassIdentifier: 
-  brain: {fileID: 393360180}
 --- !u!1001 &1310354256
 Prefab:
   m_ObjectHideFlags: 0
@@ -903,6 +872,32 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -90, z: 0}
+--- !u!114 &2014160803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b23992c8eb17439887f5e944bf04a40, type: 3}
+  m_Name: (Clone)(Clone)(Clone)(Clone)(Clone)(Clone)(Clone)
+  m_EditorClassIdentifier: 
+  broadcast: 1
+  graphModel: {fileID: 4900000, guid: d2213af4e8f3e4c5189a9de24b5e02d3, type: 3}
+  graphScope: 
+  graphPlaceholders:
+  - name: epsilon
+    valueType: 1
+    minValue: -1
+    maxValue: 1
+  BatchSizePlaceholderName: batch_size
+  StatePlacholderName: state
+  RecurrentInPlaceholderName: recurrent_in
+  RecurrentOutPlaceholderName: recurrent_out
+  ObservationPlaceholderName: []
+  ActionPlaceholderName: action
+  brain: {fileID: 393360180}
 --- !u!1 &2095421678
 GameObject:
   m_ObjectHideFlags: 0
