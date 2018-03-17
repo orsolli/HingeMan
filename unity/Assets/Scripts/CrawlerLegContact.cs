@@ -15,6 +15,8 @@ public class CrawlerLegContact : MonoBehaviour {
         if (other.gameObject.name == "Platform")
         {
             agent.leg_touching[index] = true;
+        } else {
+            agent.flirting = true;
         }
     }
 
