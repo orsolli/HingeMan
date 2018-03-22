@@ -19,6 +19,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4263703937888604}
+  - component: {fileID: 114305442832402074}
   m_Layer: 0
   m_Name: Ragdoll
   m_TagString: Untagged
@@ -493,6 +494,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -527,6 +529,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -561,6 +564,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -595,6 +599,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -629,6 +634,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -663,6 +669,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -697,6 +704,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -731,6 +739,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -765,6 +774,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -799,6 +809,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -833,6 +844,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -867,6 +879,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -901,6 +914,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1256,6 +1270,33 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 2.0000005, z: 1.0000002}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &114305442832402074
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1061256745153222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a4420fca1499b41c8903af7e85ebdad6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  brain: {fileID: 0}
+  observations: []
+  maxStep: 0
+  resetOnDone: 1
+  reward: 0
+  done: 0
+  value: 0
+  CumulativeReward: 0
+  stepCounter: 0
+  agentStoredAction: []
+  memory: []
+  id: 0
+  strength: 50
+  maxFailingSteps: 1024
+  fell: 0
+  fallen: 0
 --- !u!135 &135033894655753404
 SphereCollider:
   m_ObjectHideFlags: 1

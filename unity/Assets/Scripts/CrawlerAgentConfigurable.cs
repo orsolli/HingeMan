@@ -225,11 +225,11 @@ public class CrawlerAgentConfigurable: Agent
             //if (onMyWay > 0.9f) {
             //reward += 0.25f * onMyWay;//(dot > 1 ? onMyWay : 0.1f * onMyWay) * 0.2f;// + 0.05f * Mathf.Clamp(dis, 0, 10);              
             //}
-            bool overHead = false;
+            //bool overHead = false;
             for (int i = 8; i<16; i++) {
                 float diff = limbs[i].transform.localPosition.y - body.transform.localPosition.y;
                 if (diff > 2) {
-                    overHead = true;
+                    //overHead = true;
                 } else if (diff > 0) {
                     reward -= 0.05f * diff / 8;
                 }
