@@ -81,7 +81,7 @@ public class HumanAgent : Agent {
 		
         Monitor.Log("Actions", act, MonitorType.hist, head);
 		if (!done) {
-			float[] rewards = new float[6];
+			/*float[] rewards = new float[6];
 			reward = (head.localPosition.y - 3) / 1.76f;
 			if (head.localPosition.y < 3)
 				failCounter += 1;
@@ -119,8 +119,50 @@ public class HumanAgent : Agent {
 				failCounter = Mathf.Max(0, failCounter - 1);
 			//reward += 0.075f * fallReward;
 			//rewards[5] = fallReward;
-			rewards[0] = reward;
-			Monitor.Log("Rewards", rewards, MonitorType.hist, head);
+			rewards[0] = reward;*/
+
+
+			Vector3 massCenter = Vector3.zero;
+				float mass = 0f;
+				foreach (Rigidbody part in GetComponentsInChildren<Rigidbody>())
+				{
+					massCenter += part.worldCenterOfMass * part.mass;
+					mass += part.mass;
+				}
+				massCenter /= mass;
+
+			Vector3 touchCenter = Vector3.zero;
+				Transform rFoot = transform.Find("RightFoot");
+				Transform lFoot = transform.Find("LeftFoot");
+				bool rFootTouch = isTouchingFloor(rFoot.GetComponent<Collider>());
+				bool lFootTouch = isTouchingFloor(lFoot.GetComponent<Collider>());
+				if (rFootTouch && lFootTouch) {
+					touchCenter = (
+						rFoot.position +
+						lFoot.position
+						) / 2;
+				} else if (rFootTouch != lFootTouch) {
+					touchCenter = rFootTouch ? rFoot.position : lFoot.position;
+				}
+
+			float feetRadius = Vector3.Distance(
+				rFoot.position,
+				lFoot.position);
+			float lowestHeight = 2;
+			float highestHeight = 3;
+			float balanceLoss = 1;
+			if (touchCenter != Vector3.zero) {
+				balanceLoss = Vector3.Distance(touchCenter, new Vector3(massCenter.x, 0, massCenter.z)) / feetRadius;
+			}
+			float heightReward = ( Vector3.Dot(massCenter, Vector3.up) - lowestHeight ) / ( highestHeight - lowestHeight );
+			reward = heightReward - balanceLoss;
+			if (heightReward < 0) {
+				done = true;
+			}
+
+        	//Monitor.Log("massCenter", heightReward, MonitorType.slider, head);
+
+			//Monitor.Log("Rewards", rewards, MonitorType.hist, head);
 			reward = Mathf.Clamp(reward, -1, 1);
 		}
         Monitor.Log("Reward", reward, MonitorType.slider, head);
@@ -146,4 +188,10 @@ public class HumanAgent : Agent {
     public override void AgentOnDone()
     {
     }
+
+	public static bool isTouchingFloor(Collider a, float floorHeight = 0) {
+		Vector3 floor = new Vector3(a.transform.position.x, floorHeight, a.transform.position.z);
+		Vector3 closest = a.ClosestPointOnBounds(floor);
+		return Vector3.Distance(closest, floor) < 0.01f;
+	}
 }
