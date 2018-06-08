@@ -164,7 +164,7 @@ public class HumanAgent : Agent {
         	//Monitor.Log("massCenter", heightReward, MonitorType.slider, head);
 
 			//Monitor.Log("Rewards", rewards, MonitorType.hist, head);
-        	Debug.Log("Reward: " + reward + "heightReward: " + heightReward + "balanceLoss: " + balanceLoss);
+        	//Debug.Log("Reward: " + reward + "heightReward: " + heightReward + "balanceLoss: " + balanceLoss);
 			reward = Mathf.Clamp(reward, -1, 1);
 		}
         Monitor.Log("Reward", reward, MonitorType.slider, head);
