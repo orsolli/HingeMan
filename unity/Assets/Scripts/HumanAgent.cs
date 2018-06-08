@@ -10,8 +10,11 @@ public class HumanAgent : Agent {
 	public int maxFailingSteps = 1024;
 	public int failCounter = 0;
 	public Dictionary<string, bool> grounded;
-	private float[] lastAct = new float[18];
+	//private float[] lastAct = new float[18];
 	public Vector3 sumNetForce = Vector3.zero;
+
+	public float lowestHeight = 2;
+	public float highestHeight = 3;
 
     // Initial positions
     Dictionary<GameObject, Vector3> transformsPosition;
@@ -148,14 +151,12 @@ public class HumanAgent : Agent {
 			float feetRadius = Vector3.Distance(
 				rFoot.position,
 				lFoot.position);
-			float lowestHeight = 2;
-			float highestHeight = 3;
 			float balanceLoss = 1;
 			if (touchCenter != Vector3.zero) {
 				balanceLoss = Vector3.Distance(touchCenter, new Vector3(massCenter.x, 0, massCenter.z)) / feetRadius;
 			}
 			float heightReward = ( Vector3.Dot(massCenter, Vector3.up) - lowestHeight ) / ( highestHeight - lowestHeight );
-			reward = heightReward - balanceLoss;
+			reward = Mathf.Clamp(heightReward, -1, 1) - balanceLoss;
 			if (heightReward < 0) {
 				done = true;
 			}
@@ -163,6 +164,7 @@ public class HumanAgent : Agent {
         	//Monitor.Log("massCenter", heightReward, MonitorType.slider, head);
 
 			//Monitor.Log("Rewards", rewards, MonitorType.hist, head);
+        	Debug.Log("Reward: " + reward + "heightReward: " + heightReward + "balanceLoss: " + balanceLoss);
 			reward = Mathf.Clamp(reward, -1, 1);
 		}
         Monitor.Log("Reward", reward, MonitorType.slider, head);
