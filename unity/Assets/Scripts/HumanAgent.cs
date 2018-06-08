@@ -4,17 +4,17 @@ using UnityEngine;
 
 public class HumanAgent : Agent {
 
-	public GameObject tracer;
+	//public GameObject tracer;
 	Transform head;
 	public float strength = 1000;
-	public int maxFailingSteps = 1024;
-	public int failCounter = 0;
-	public Dictionary<string, bool> grounded;
+	//public int maxFailingSteps = 1024;
+	//public int failCounter = 0;
+	//public Dictionary<string, bool> grounded;
 	//private float[] lastAct = new float[18];
-	public Vector3 sumNetForce = Vector3.zero;
+	//public Vector3 sumNetForce = Vector3.zero;
 
-	public float lowestHeight = 2;
-	public float highestHeight = 3;
+	public float lowestHeight = 1.8f;
+	public float highestHeight = 2.8f;
 
     // Initial positions
     Dictionary<GameObject, Vector3> transformsPosition;
@@ -33,11 +33,11 @@ public class HumanAgent : Agent {
             transformsRotation[limb.gameObject] = limb.transform.rotation;
 		}
 		
-		grounded = new Dictionary<string, bool>();
+		/*grounded = new Dictionary<string, bool>();
 		foreach (Collider limb in GetComponentsInChildren<Collider>())
 		{
 			grounded[limb.gameObject.name] = false;
-		}
+		}*/
 
 	}
 
@@ -172,10 +172,10 @@ public class HumanAgent : Agent {
 
     public override void AgentReset()
     {
-		foreach (Collider limb in GetComponentsInChildren<Collider>())
+		/*foreach (Collider limb in GetComponentsInChildren<Collider>())
 		{
 			grounded[limb.gameObject.name] = false;
-		}
+		}*/
 		foreach (Transform limb in GetComponentsInChildren<Transform>())
 		{
             limb.position = transformsPosition[limb.gameObject];
