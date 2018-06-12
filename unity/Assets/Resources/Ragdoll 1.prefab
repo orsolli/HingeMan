@@ -472,7 +472,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1335565523152258}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.65, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4925704006923350}
@@ -729,7 +729,7 @@ Transform:
   m_GameObject: {fileID: 1670460670331024}
   m_LocalRotation: {x: 0.7071068, y: -0, z: 0.000000018626451, w: 0.70710677}
   m_LocalPosition: {x: -0.25, y: 0.07250404, z: 0.24999714}
-  m_LocalScale: {x: 0.25, y: 0.5000002, z: 0.12500006}
+  m_LocalScale: {x: 0.25, y: 1, z: 0.12500006}
   m_Children: []
   m_Father: {fileID: 4130262422953336}
   m_RootOrder: 14
@@ -742,7 +742,7 @@ Transform:
   m_GameObject: {fileID: 1143351189125240}
   m_LocalRotation: {x: 0.7071068, y: -0, z: 0.000000018626451, w: 0.70710677}
   m_LocalPosition: {x: 0.25, y: 0.07250404, z: 0.24999619}
-  m_LocalScale: {x: 0.25, y: 0.5000002, z: 0.12500006}
+  m_LocalScale: {x: 0.25, y: 1, z: 0.12500006}
   m_Children: []
   m_Father: {fileID: 4130262422953336}
   m_RootOrder: 5
@@ -773,7 +773,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -808,7 +807,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -843,7 +841,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -878,7 +875,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -913,7 +909,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -948,7 +943,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -983,7 +977,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1012,13 +1005,12 @@ MeshRenderer:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1143351189125240}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1053,7 +1045,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1088,7 +1079,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1123,7 +1113,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1158,7 +1147,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1187,13 +1175,12 @@ MeshRenderer:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1670460670331024}
   m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 4294967295
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
   m_Materials:
   - {fileID: 2100000, guid: 970c959732689460a9ce06b79bd47f5f, type: 2}
   m_StaticBatchInfo:
@@ -1256,7 +1243,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1143351189125240}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!33 &33572266052493024
 MeshFilter:
   m_ObjectHideFlags: 1
@@ -1291,7 +1278,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1670460670331024}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!33 &33825648726398328
 MeshFilter:
   m_ObjectHideFlags: 1
@@ -1646,7 +1633,7 @@ HingeJoint:
   m_Anchor: {x: 0.2, y: 0, z: 0}
   m_Axis: {x: 0, y: 0, z: 1}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: -0.20000005, y: 0, z: 0}
+  m_ConnectedAnchor: {x: -0.19999999, y: 0, z: 0}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -1656,7 +1643,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -1680,7 +1667,7 @@ HingeJoint:
   m_Anchor: {x: 0, y: -0.5, z: 0}
   m_Axis: {x: 1, y: 0, z: 0}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0, y: -1.0999937, z: -0.0000118017215}
+  m_ConnectedAnchor: {x: 0.000000059604645, y: -1.0999936, z: -1.0000116}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -1690,7 +1677,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -10
@@ -1724,7 +1711,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -25
@@ -1758,7 +1745,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -30
@@ -1782,7 +1769,7 @@ HingeJoint:
   m_Anchor: {x: 0, y: -0.5, z: 0}
   m_Axis: {x: 1, y: 0, z: 0}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0, y: -1.0999937, z: -0.000015616419}
+  m_ConnectedAnchor: {x: 0, y: -1.0999936, z: -1.0000154}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -1792,7 +1779,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -10
@@ -1816,7 +1803,7 @@ HingeJoint:
   m_Anchor: {x: 0, y: 0.8, z: 0}
   m_Axis: {x: 0, y: 1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0.119999886, y: 0, z: 0}
+  m_ConnectedAnchor: {x: 0.119999945, y: 0, z: 0}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -1826,7 +1813,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -1860,7 +1847,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -10
@@ -1890,7 +1877,7 @@ HingeJoint:
     spring: 0
     damper: 0
     targetPosition: 0
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     targetVelocity: 0
     force: 500
@@ -1928,7 +1915,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -50
@@ -1952,7 +1939,7 @@ HingeJoint:
   m_Anchor: {x: 0.2, y: 0, z: 0}
   m_Axis: {x: 0, y: 0, z: 1}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0.20000005, y: 0, z: 0}
+  m_ConnectedAnchor: {x: 0.19999999, y: 0, z: 0}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -1962,7 +1949,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -1996,7 +1983,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -5
@@ -2030,7 +2017,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -30
@@ -2060,7 +2047,7 @@ HingeJoint:
     spring: 0
     damper: 0
     targetPosition: 0
-  m_UseMotor: 0
+  m_UseMotor: 1
   m_Motor:
     targetVelocity: 0
     force: 500
@@ -2088,7 +2075,7 @@ HingeJoint:
   m_Anchor: {x: 0, y: 0.8, z: 0}
   m_Axis: {x: 0, y: -1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
-  m_ConnectedAnchor: {x: 0.119999886, y: 0, z: 0}
+  m_ConnectedAnchor: {x: 0.119999945, y: 0, z: 0}
   m_UseSpring: 0
   m_Spring:
     spring: 0
@@ -2098,7 +2085,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -2132,7 +2119,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -50
@@ -2166,7 +2153,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -5
@@ -2200,7 +2187,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -2234,7 +2221,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -2268,7 +2255,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 1000
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -10
@@ -2302,7 +2289,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -90
@@ -2336,7 +2323,7 @@ HingeJoint:
   m_Motor:
     targetVelocity: 0
     force: 500
-    freeSpin: 1
+    freeSpin: 0
   m_UseLimits: 1
   m_Limits:
     min: -45
@@ -2360,7 +2347,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2.0000005, z: 1.0000002}
+  m_Size: {x: 1, y: 1, z: 1.0000002}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!65 &65198197061253342
 BoxCollider:
@@ -2396,7 +2383,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 2.0000005, z: 1.0000002}
+  m_Size: {x: 1, y: 1, z: 1.0000002}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &114954219882740942
 MonoBehaviour:
@@ -2410,9 +2397,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brain: {fileID: 0}
-  observations:
-  - {fileID: 0}
-  maxStep: 0
+  observations: []
+  maxStep: 5120
   resetOnDone: 1
   reward: 0
   done: 0
@@ -2422,11 +2408,9 @@ MonoBehaviour:
   agentStoredAction: []
   memory: []
   id: 0
-  tracer: {fileID: 0}
   strength: 400
-  maxFailingSteps: 1024
-  failCounter: 0
-  sumNetForce: {x: 0, y: 0, z: 0}
+  lowestHeight: 1.8
+  highestHeight: 2.8
 --- !u!135 &135367863472365570
 SphereCollider:
   m_ObjectHideFlags: 1

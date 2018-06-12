@@ -133,12 +133,59 @@ public class HumanAgent : Agent {
 					mass += part.mass;
 				}
 				massCenter /= mass;
+			Vector2 projectedMassCenter = new Vector2(massCenter.x, massCenter.z);
 
 			Vector3 touchCenter = Vector3.zero;
 				Transform rFoot = transform.Find("RightFoot");
 				Transform lFoot = transform.Find("LeftFoot");
-				bool rFootTouch = isTouchingFloor(rFoot.GetComponent<Collider>());
-				bool lFootTouch = isTouchingFloor(lFoot.GetComponent<Collider>());
+				Vector3[] rFootVerts = rFoot.GetComponent<MeshFilter>().mesh.vertices;
+				Vector3[] lFootVerts = lFoot.GetComponent<MeshFilter>().mesh.vertices;
+				for (int i = 0; i < rFootVerts.Length; i++) {
+					rFootVerts[i] = rFoot.transform.localToWorldMatrix.MultiplyPoint(rFootVerts[i]);
+					//rFootVerts[i] += new Vector3(rFoot.transform.position.x + transform.position.x, -rFootVerts[i].y, rFoot.transform.position.z + transform.position.z);
+				}
+				for (int i = 0; i < lFootVerts.Length; i++) {
+					lFootVerts[i] = lFoot.transform.localToWorldMatrix.MultiplyPoint(lFootVerts[i]);
+					//lFootVerts[i] += new Vector3(lFoot.transform.position.x + transform.position.x, -rFootVerts[i].y, lFoot.transform.position.z + transform.position.z);
+				}
+				Vector3[] vertices = new Vector3[rFootVerts.Length + lFootVerts.Length];
+				rFootVerts.CopyTo(vertices, 0);
+				lFootVerts.CopyTo(vertices, rFootVerts.Length);
+				//int L = head.GetComponent<MeshFilter>().mesh.vertices.Length;
+				Vector2[] hull = bound(vertices);//new Vector2[vertices.Length];//
+				#if false
+					int[] triangles = new int[hull.Length*3];
+					for (int i = 3; i < hull.Length; i++) {
+						int j = (i-3)*3;
+						triangles[j] = i-1;
+						triangles[j+1] = 0;
+						triangles[j+2] = i-2;
+
+					}
+					Vector3[] newVertices = new Vector3[hull.Length];
+					for (int i = 0; i < hull.Length; i++) {
+						newVertices[i] = head.transform.worldToLocalMatrix.MultiplyPoint(new Vector3(hull[i].x, 0, hull[i].y));
+						
+					}
+					Mesh m = head.GetComponent<MeshFilter>().mesh;
+					m.Clear();
+					m.vertices = newVertices;
+					m.triangles = triangles;
+					m.uv = hull;
+				#endif
+				bool innafor = within(hull, projectedMassCenter);
+				float distance = 0;
+				if (!innafor) {
+					int closest = 0;
+					distance = Vector2.Distance(hull[0], projectedMassCenter);
+					for (int i = 0; i < hull.Length; i++) {
+						if (Vector2.Distance(hull[i], projectedMassCenter) < distance) {
+							closest = i;
+							distance = Vector2.Distance(hull[closest], projectedMassCenter);
+						}
+					}
+				}
+/*
 				if (rFootTouch && lFootTouch) {
 					touchCenter = (
 						rFoot.position +
@@ -150,14 +197,11 @@ public class HumanAgent : Agent {
 
 			float feetRadius = Vector3.Distance(
 				rFoot.position,
-				lFoot.position);
-			float balanceLoss = 1;
-			if (touchCenter != Vector3.zero) {
-				balanceLoss = Vector3.Distance(touchCenter, new Vector3(massCenter.x, 0, massCenter.z)) / feetRadius;
-			}
+				lFoot.position); */
+			float balanceLoss = Mathf.Pow(distance, 0.5f) * 2;
 			float heightReward = ( Vector3.Dot(massCenter, Vector3.up) - lowestHeight ) / ( highestHeight - lowestHeight );
-			reward = Mathf.Clamp(heightReward, -1, 1) - balanceLoss;
-			if (heightReward < 0) {
+			reward = Mathf.Clamp(heightReward, -1, 1) - Mathf.Clamp(balanceLoss, 0, 2);
+			if (heightReward < 0 || balanceLoss > 2) {
 				done = true;
 			}
 
@@ -191,9 +235,69 @@ public class HumanAgent : Agent {
     {
     }
 
-	public static bool isTouchingFloor(Collider a, float floorHeight = 0) {
-		Vector3 floor = new Vector3(a.transform.position.x, floorHeight, a.transform.position.z);
-		Vector3 closest = a.ClosestPointOnBounds(floor);
-		return Vector3.Distance(closest, floor) < 0.01f;
+
+	/**
+	* Three points are a counter-clockwise turn if ccw > 0, clockwise if
+	* ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
+	* gives twice the signed  area of the triangle formed by p1, p2 and p3.
+	*/
+	public static float ccw(Vector2 p1, Vector2 p2, Vector2 p3){
+		return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x);
+	}
+
+	public static Vector2[] bound(Vector3[] p) {
+		int N = p.Length; //number of points
+		Vector2[] points = new Vector2[N];
+		int first = 0;
+		for(int i = 0; i < N; i++) {
+			int furthest = 0;
+			float distance = Vector3.Distance(p[0], p[i]);
+			for (int j = 0; j < p.Length; j++) {
+				if (Vector3.Distance(p[j], p[i]) > distance) {
+					furthest = j;
+					distance = Vector3.Distance(p[furthest], p[i]);
+				}
+			}
+			float height = p[i].y;
+			float ratio = 1 - Mathf.Clamp(height, 0, distance)/distance;
+			Vector2 fromFurthestToCurrent = new Vector2(p[i].x, p[i].z) - new Vector2(p[furthest].x, p[furthest].z);
+			Vector2 shortened = fromFurthestToCurrent * ratio;
+			Vector2 finishTransform = shortened + new Vector2(p[furthest].x, p[furthest].z);
+			points[i] = finishTransform;
+			if (points[first].x > points[i].x) {
+				first = i;
+			}
+		}
+
+		Vector2[] hull = new Vector2[points.Length];
+		Vector2 pointOnHull = points[first]; // which is guaranteed to be part of the CH(S)
+		Vector2 endpoint = Vector2.zero;
+
+		// wrapped around to first hull point
+		int L = 0;
+		for(int i = 0; endpoint != hull[0] || i == 0; i++, pointOnHull = endpoint) {
+			hull[i] = pointOnHull;
+			endpoint = points[0];      // initial endpoint for a candidate edge on the hull
+			for(int j = 1; j < hull.Length; j++) {
+				if (endpoint == pointOnHull || ccw(points[j], hull[i], endpoint) > 0)
+					endpoint = points[j];   // found greater left turn, update endpoint
+			}
+			L = i;
+		}
+		Vector2[] result = new Vector2[L];
+		System.Array.Copy(hull, 0, result, 0, L);
+		return result;
+	}
+
+	public static bool within(Vector2[] hull, Vector2 test) {
+		int N = hull.Length;
+		int i, j = 0;
+		bool c = false;
+		for (i = 0, j = N-1; i < N; j = i++) {
+			if ( ((hull[i].y>test.y) != (hull[j].y>test.y)) &&
+			(test.x < (hull[j].x-hull[i].x) * (test.y-hull[i].y) / (hull[j].y-hull[i].y) + hull[i].x) )
+			c = !c;
+		}
+		return c;
 	}
 }
