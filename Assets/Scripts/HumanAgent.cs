@@ -15,6 +15,10 @@ public class HumanAgent : Agent
     //public Dictionary<string, bool> grounded;
     //private float[] lastAct = new float[18];
     //public Vector3 sumNetForce = Vector3.zero;
+    private Dictionary<GameObject, Vector3> velocity;
+    private Dictionary<GameObject, Vector3> angular_velocity;
+    private Dictionary<GameObject, Vector3> acceleration;
+    private Dictionary<GameObject, Vector3> angular_acceleration;
 
     public float lowestHeight = 1.8f;
     public float highestHeight = 2.8f;
@@ -34,6 +38,19 @@ public class HumanAgent : Agent
         {
             transformsPosition[limb.gameObject] = limb.transform.position;
             transformsRotation[limb.gameObject] = limb.transform.rotation;
+        }
+        acceleration = new Dictionary<GameObject, Vector3>();
+        angular_acceleration = new Dictionary<GameObject, Vector3>();
+        velocity = new Dictionary<GameObject, Vector3>();
+        angular_velocity = new Dictionary<GameObject, Vector3>();
+        foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
+        {
+            acceleration[limb.gameObject] = Vector3.zero;
+            angular_acceleration[limb.gameObject] = Vector3.zero;
+
+            velocity[limb.gameObject] = Vector3.zero;
+            angular_velocity[limb.gameObject] = Vector3.zero;
+
         }
 
         /*grounded = new Dictionary<string, bool>();
@@ -55,7 +72,16 @@ public class HumanAgent : Agent
                 sensor.AddObservation(limbPos);
             }
             sensor.AddObservation(limb.transform.localRotation);
+        }
 
+        foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
+        {
+            sensor.AddObservation((acceleration[limb.gameObject] - Physics.gravity) / (100 * Physics.gravity.magnitude));
+            sensor.AddObservation(angular_acceleration[limb.gameObject] / (100 * Physics.gravity.magnitude));
+            if ((acceleration[limb.gameObject] - Physics.gravity).magnitude / (100 * Physics.gravity.magnitude) > 0.9)
+            {
+                Debug.Log("Observed alot of acceleration on " + limb.name + ": " + (acceleration[limb.gameObject] - Physics.gravity));
+            }
         }
     }
 
@@ -87,140 +113,45 @@ public class HumanAgent : Agent
 
     void FixedUpdate()
     {
-        float reward = 0;
-        /*float[] rewards = new float[6];
-        reward = (head.localPosition.y - 3) / 1.76f;
-        if (head.localPosition.y < 3)
-            failCounter += 1;
-        rewards[1] = reward;
-
-        Vector3 dir = head.GetComponent<Rigidbody>().velocity;
-        //reward -= Vector3.Dot(dir, Vector3.up) < 0 ? -0.025f : 0.1f;
-        //rewards[2] = Vector3.Dot(dir, Vector3.up) < 0 ? -0.25f : 1f;
-
-        reward -= effort;
-        rewards[3] = -effort;
-
-        float rewardDiff = 0;
-        for (int i=0; i<18; i++) {
-            rewardDiff += (Mathf.Max(Mathf.Pow((lastAct[i]+1)/2 - (act[i]+1)/2, 2), 0.5f) - 0.5f) / 18;
-        }
-        //reward -= 0.1f * rewardDiff;
-        //rewards[4] = -rewardDiff;
-        lastAct = act;
-
-        float fallReward = 0;
-        foreach (string entry in grounded.Keys) {
-            fallReward -= grounded[entry] && !entry.Contains("Foot") ? 0.05f : 0;
-            fallReward -= grounded[entry] && entry == "Head" ? 0.05f : 0;
-            if (grounded[entry] && !entry.Contains("Foot")) {
-                failCounter += 1;
-                fallReward -= 0.4f * Mathf.Pow(failCounter / maxFailingSteps != 0 ? maxFailingSteps : 1 , 2);
-            }
-        }
-        if (maxFailingSteps < failCounter) {
-            done = true;
-            failCounter = 0;
-        }
-        if (fallReward < 0.05f)
-            failCounter = Mathf.Max(0, failCounter - 1);
-        //reward += 0.075f * fallReward;
-        //rewards[5] = fallReward;
-        rewards[0] = reward;*/
-
-
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
+        float avg_acceleration = 0f;
+        Vector3 avg_velocity = Vector3.zero;
+        int len = 0;
         foreach (Rigidbody part in GetComponentsInChildren<Rigidbody>())
         {
+            acceleration[part.gameObject] = (part.velocity - velocity[part.gameObject]) / Time.fixedDeltaTime;
+            angular_acceleration[part.gameObject] = (part.angularVelocity - angular_velocity[part.gameObject]) / Time.fixedDeltaTime;
+            velocity[part.gameObject] = part.velocity;
+            angular_velocity[part.gameObject] = part.angularVelocity;
+
+            len++;
+            len++;
+            avg_acceleration += (
+                acceleration[part.gameObject].magnitude +
+                angular_acceleration[part.gameObject].magnitude
+            ) * part.mass;
+            avg_velocity += part.velocity * part.mass;
+
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
+        avg_acceleration /= len;
+        avg_velocity /= len;
         massCenter /= mass;
-        Vector2 projectedMassCenter = new Vector2(massCenter.x, massCenter.z);
+        float reward = 1 - avg_acceleration / (100 * Physics.gravity.magnitude) - avg_velocity.magnitude; // Max 10G
 
-        Vector3 touchCenter = Vector3.zero;
-        Transform rFoot = transform.Find("RightFoot");
-        Transform lFoot = transform.Find("LeftFoot");
-        Vector3[] rFootVerts = rFoot.GetComponent<MeshFilter>().mesh.vertices;
-        Vector3[] lFootVerts = lFoot.GetComponent<MeshFilter>().mesh.vertices;
-        for (int i = 0; i < rFootVerts.Length; i++)
-        {
-            rFootVerts[i] = rFoot.transform.localToWorldMatrix.MultiplyPoint(rFootVerts[i]);
-            //rFootVerts[i] += new Vector3(rFoot.transform.position.x + transform.position.x, -rFootVerts[i].y, rFoot.transform.position.z + transform.position.z);
-        }
-        for (int i = 0; i < lFootVerts.Length; i++)
-        {
-            lFootVerts[i] = lFoot.transform.localToWorldMatrix.MultiplyPoint(lFootVerts[i]);
-            //lFootVerts[i] += new Vector3(lFoot.transform.position.x + transform.position.x, -rFootVerts[i].y, lFoot.transform.position.z + transform.position.z);
-        }
-        Vector3[] vertices = new Vector3[rFootVerts.Length + lFootVerts.Length];
-        rFootVerts.CopyTo(vertices, 0);
-        lFootVerts.CopyTo(vertices, rFootVerts.Length);
-        //int L = head.GetComponent<MeshFilter>().mesh.vertices.Length;
-        Vector2[] hull = bound(vertices);//new Vector2[vertices.Length];//
-#if false
-				int[] triangles = new int[hull.Length*3];
-				for (int i = 3; i < hull.Length; i++) {
-					int j = (i-3)*3;
-					triangles[j] = i-1;
-					triangles[j+1] = 0;
-					triangles[j+2] = i-2;
-
-				}
-				Vector3[] newVertices = new Vector3[hull.Length];
-				for (int i = 0; i < hull.Length; i++) {
-					newVertices[i] = head.transform.worldToLocalMatrix.MultiplyPoint(new Vector3(hull[i].x, 0, hull[i].y));
-					
-				}
-				Mesh m = head.GetComponent<MeshFilter>().mesh;
-				m.Clear();
-				m.vertices = newVertices;
-				m.triangles = triangles;
-				m.uv = hull;
-#endif
-        bool innafor = within(hull, projectedMassCenter);
-        float distance = 0;
-        if (!innafor)
-        {
-            int closest = 0;
-            distance = Vector2.Distance(hull[0], projectedMassCenter);
-            for (int i = 0; i < hull.Length; i++)
-            {
-                if (Vector2.Distance(hull[i], projectedMassCenter) < distance)
-                {
-                    closest = i;
-                    distance = Vector2.Distance(hull[closest], projectedMassCenter);
-                }
-            }
-        }
-        /*
-						if (rFootTouch && lFootTouch) {
-							touchCenter = (
-								rFoot.position +
-								lFoot.position
-								) / 2;
-						} else if (rFootTouch != lFootTouch) {
-							touchCenter = rFootTouch ? rFoot.position : lFoot.position;
-						}
-
-					float feetRadius = Vector3.Distance(
-						rFoot.position,
-						lFoot.position); */
-        float balanceLoss = Mathf.Pow(distance, 0.5f) * 2;
+        reward = Mathf.Clamp(reward, -1, 1);
         float heightReward = (Vector3.Dot(massCenter, Vector3.up) - lowestHeight) / (highestHeight - lowestHeight);
-        reward = Mathf.Clamp(heightReward, -1, 1) - Mathf.Clamp(balanceLoss, 0, 2);
-        if (heightReward < 0 || balanceLoss > 2)
+        if (heightReward < 0)
         {
+            AddReward(-1f);
             EndEpisode();
         }
-
-        //Monitor.Log("massCenter", heightReward, MonitorType.slider, head);
-
-        //Monitor.Log("Rewards", rewards, MonitorType.hist, head);
-        //Debug.Log("Reward: " + reward + "heightReward: " + heightReward + "balanceLoss: " + balanceLoss);
-        reward = Mathf.Clamp(reward, -1, 1);
-        AddReward(reward);
+        else
+        {
+            AddReward(reward);
+        }
         Monitor.Log("Reward", reward, MonitorType.slider, head);
     }
 
