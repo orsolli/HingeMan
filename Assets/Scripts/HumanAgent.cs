@@ -63,25 +63,25 @@ public class HumanAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
+        Quaternion head_rotation = Quaternion.Inverse(head.rotation);
         foreach (Collider limb in GetComponentsInChildren<Collider>())
         {
-            Vector3 limbPos = limb.transform.localPosition - head.localPosition;
-            limbPos /= limbPos.magnitude != 0 ? limbPos.magnitude : 1;
             if (limb.gameObject.name != "Head")
             {
-                sensor.AddObservation(limbPos);
+                Vector3 limbPos = limb.transform.position - head.position;
+                sensor.AddObservation(head_rotation * limbPos);
+                sensor.AddObservation(head_rotation * limb.transform.rotation);
             }
-            sensor.AddObservation(limb.transform.localRotation);
         }
 
         foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
         {
-            sensor.AddObservation((acceleration[limb.gameObject] - Physics.gravity) / (100 * Physics.gravity.magnitude));
-            sensor.AddObservation(angular_acceleration[limb.gameObject] / (100 * Physics.gravity.magnitude));
-            if ((acceleration[limb.gameObject] - Physics.gravity).magnitude / (100 * Physics.gravity.magnitude) > 0.9)
-            {
-                Debug.Log("Observed alot of acceleration on " + limb.name + ": " + (acceleration[limb.gameObject] - Physics.gravity));
-            }
+            Vector3 total_acceleration = acceleration[limb.gameObject] - Physics.gravity;
+            total_acceleration = head_rotation * total_acceleration;
+            sensor.AddObservation(total_acceleration);
+
+            Vector3 total_angular_acceleration = head_rotation * angular_acceleration[limb.gameObject];
+            sensor.AddObservation(total_angular_acceleration);
         }
     }
 
