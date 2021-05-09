@@ -124,8 +124,6 @@ public class HumanAgent : Agent
             motor.targetVelocity = act[action] * strength;
             limb.motor = motor;
             action++;
-
-            Monitor.Log(limb.name, limb.motor.targetVelocity / strength, MonitorType.slider, limb.transform);
         }
 
         // Collect reward
