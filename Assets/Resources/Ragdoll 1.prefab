@@ -757,6 +757,7 @@ MonoBehaviour:
   strength: 400
   lowestHeight: 1.8
   highestHeight: 2.8
+  clone: {fileID: 0}
 --- !u!114 &-3583986954458886553
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -784,7 +785,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 216
+    VectorObservationSize: 90
     NumStackedVectorObservations: 1
     VectorActionSize: 15000000
     VectorActionDescriptions: []

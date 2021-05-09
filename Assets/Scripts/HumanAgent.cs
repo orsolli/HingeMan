@@ -17,11 +17,14 @@ public class HumanAgent : Agent
     //public Vector3 sumNetForce = Vector3.zero;
     private Dictionary<GameObject, Vector3> velocity;
     private Dictionary<GameObject, Vector3> angular_velocity;
-    private Dictionary<GameObject, Vector3> acceleration;
-    private Dictionary<GameObject, Vector3> angular_acceleration;
+    private Dictionary<GameObject, Vector3>[] acceleration = new Dictionary<GameObject, Vector3>[5];
+    private Dictionary<GameObject, Vector3>[] angular_acceleration = new Dictionary<GameObject, Vector3>[5];
+    private int frame = 0;
 
     public float lowestHeight = 1.8f;
     public float highestHeight = 2.8f;
+
+    public GameObject clone;
 
     // Initial positions
     Dictionary<GameObject, Vector3> transformsPosition;
@@ -39,18 +42,23 @@ public class HumanAgent : Agent
             transformsPosition[limb.gameObject] = limb.transform.position;
             transformsRotation[limb.gameObject] = limb.transform.rotation;
         }
-        acceleration = new Dictionary<GameObject, Vector3>();
-        angular_acceleration = new Dictionary<GameObject, Vector3>();
+
         velocity = new Dictionary<GameObject, Vector3>();
         angular_velocity = new Dictionary<GameObject, Vector3>();
-        foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
+        for (int i = 0; i < 5; i++)
         {
-            acceleration[limb.gameObject] = Vector3.zero;
-            angular_acceleration[limb.gameObject] = Vector3.zero;
-
-            velocity[limb.gameObject] = Vector3.zero;
-            angular_velocity[limb.gameObject] = Vector3.zero;
-
+            acceleration[i] = new Dictionary<GameObject, Vector3>();
+            angular_acceleration[i] = new Dictionary<GameObject, Vector3>();
+            foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
+            {
+                acceleration[i][limb.gameObject] = Vector3.zero;
+                angular_acceleration[i][limb.gameObject] = Vector3.zero;
+                if (i == 0)
+                {
+                    velocity[limb.gameObject] = Vector3.zero;
+                    angular_velocity[limb.gameObject] = Vector3.zero;
+                }
+            }
         }
 
         /*grounded = new Dictionary<string, bool>();
@@ -63,7 +71,7 @@ public class HumanAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        Quaternion head_rotation = Quaternion.Inverse(head.rotation);
+        Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
         foreach (Collider limb in GetComponentsInChildren<Collider>())
         {
             if (limb.gameObject.name != "Head")
@@ -71,18 +79,37 @@ public class HumanAgent : Agent
                 Vector3 limbPos = limb.transform.position - head.position;
                 sensor.AddObservation(head_rotation * limbPos);
                 sensor.AddObservation(head_rotation * limb.transform.rotation);
+
+                if (clone != null)
+                {
+                    Transform cloneLimb = clone.transform.Find(limb.gameObject.name);
+                    cloneLimb.position = head_rotation * limbPos;
+                    cloneLimb.rotation = head_rotation * limb.transform.rotation;
+                }
             }
         }
 
-        foreach (Rigidbody limb in GetComponentsInChildren<Rigidbody>())
+        Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
+        Vector3 avg_acc = Vector3.zero;
+        Vector3 avg_angular_acc = Vector3.zero;
+        for (int i = 0; i < 5; i++)
         {
-            Vector3 total_acceleration = acceleration[limb.gameObject] - Physics.gravity;
-            total_acceleration = head_rotation * total_acceleration;
-            sensor.AddObservation(total_acceleration);
-
-            Vector3 total_angular_acceleration = head_rotation * angular_acceleration[limb.gameObject];
-            sensor.AddObservation(total_angular_acceleration);
+            avg_acc += acceleration[i][head.gameObject];
+            avg_angular_acc += angular_acceleration[i][head.gameObject];
         }
+        avg_acc /= 5;
+        avg_angular_acc /= 5;
+        Vector3 total_acceleration = avg_acc - Physics.gravity;
+        total_acceleration = head_rotation * total_acceleration;
+        sensor.AddObservation(total_acceleration);
+        Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
+        sensor.AddObservation(total_angular_acceleration);
+        /*
+        Debug.DrawRay(Vector3.zero, total_acceleration);
+        Debug.DrawRay(Vector3.zero, total_angular_acceleration, Color.red);
+        Debug.DrawRay(head.position, head.position + avg_angular_acc, Color.red);
+        */
+
     }
 
     public override void OnActionReceived(float[] act)
@@ -120,16 +147,19 @@ public class HumanAgent : Agent
         int len = 0;
         foreach (Rigidbody part in GetComponentsInChildren<Rigidbody>())
         {
-            acceleration[part.gameObject] = (part.velocity - velocity[part.gameObject]) / Time.fixedDeltaTime;
-            angular_acceleration[part.gameObject] = (part.angularVelocity - angular_velocity[part.gameObject]) / Time.fixedDeltaTime;
+            Vector3 acc = (part.velocity - velocity[part.gameObject]) / Time.fixedDeltaTime;
+            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject]) / Time.fixedDeltaTime;
+            acceleration[frame][part.gameObject] = acc;
+            angular_acceleration[frame][part.gameObject] = angular_acc;
+            frame = frame % 5;
             velocity[part.gameObject] = part.velocity;
             angular_velocity[part.gameObject] = part.angularVelocity;
 
             len++;
             len++;
             avg_acceleration += (
-                acceleration[part.gameObject].magnitude +
-                angular_acceleration[part.gameObject].magnitude
+                acc.magnitude +
+                angular_acc.magnitude
             ) * part.mass;
             avg_velocity += part.velocity * part.mass;
 

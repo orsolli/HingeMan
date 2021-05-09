@@ -318,7 +318,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1591890002}
   m_LocalRotation: {x: 0.22423093, y: -0.16028053, z: 0.037416425, w: 0.96053666}
-  m_LocalPosition: {x: 3.89, y: 8.6, z: -17.31}
+  m_LocalPosition: {x: 18.47, y: 8.6, z: -21.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -341,15 +341,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.060821533
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.000009536743
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -9.096768
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -381,7 +381,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 59082349381245314, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
-      value: 0
+      value: 0.000000059604645
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
@@ -394,14 +394,14 @@ PrefabInstance:
     - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_Model
       value: 
-      objectReference: {fileID: 5022602860645237092, guid: 1637674993381c98792b0c8b8bb2ffe3, type: 3}
+      objectReference: {fileID: 5022602860645237092, guid: 0474425f6bbad5cac8458ba856223890, type: 3}
     - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_InferenceDevice
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_BrainParameters.VectorObservationSize
-      value: 216
+      value: 90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
