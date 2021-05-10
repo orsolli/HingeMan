@@ -6,9 +6,9 @@ default:
   epsilon: 0.2
   hidden_units: 512
   lambd: 0.95
-  learning_rate: 3.0e-4
+  learning_rate: 1.0e-3
   learning_rate_schedule: linear
-  max_steps: 3.0e7
+  max_steps: 1.0e7
   memory_size: 128
   normalize: true
   num_epoch: 3
