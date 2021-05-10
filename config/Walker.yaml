@@ -5,7 +5,7 @@ default:
   buffer_size: 20480
   epsilon: 0.2
   hidden_units: 512
-  lambd: 0.9
+  lambd: 0.95
   learning_rate: 3.0e-4
   learning_rate_schedule: linear
   max_steps: 3.0e7
@@ -16,7 +16,7 @@ default:
   time_horizon: 1000
   sequence_length: 64
   summary_freq: 30000
-  use_recurrent: false
+  use_recurrent: true
   vis_encode_type: simple
   keep_checkpoints: 5
   reward_signals:
