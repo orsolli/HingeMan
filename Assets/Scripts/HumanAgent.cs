@@ -30,10 +30,16 @@ public class HumanAgent : Agent
     Dictionary<GameObject, Vector3> transformsPosition;
     Dictionary<GameObject, Quaternion> transformsRotation;
 
+    // Eyes
+    Vector3 rightEye = new Vector3(0.1f, 0f, 0.25f);
+    Vector3 leftEye = new Vector3(-0.1f, 0f, 0.25f);
+    Vector3 focusPoint = Vector3.forward;
+
     public override void Initialize()
     {
 
         head = transform.Find("Head");
+        focusPoint = blindFocus(head);
 
         transformsPosition = new Dictionary<GameObject, Vector3>();
         transformsRotation = new Dictionary<GameObject, Quaternion>();
@@ -109,7 +115,15 @@ public class HumanAgent : Agent
         Debug.DrawRay(Vector3.zero, total_angular_acceleration, Color.red);
         Debug.DrawRay(head.position, head.position + avg_angular_acc, Color.red);
         */
+        Vector3 absRightEye = head.position + head.rotation * rightEye;
+        Vector3 absLeftEye = head.position + head.rotation * leftEye;
+        var lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, Vector3.up);
+        sensor.AddObservation(lookAtRight);
+        var lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, Vector3.up);
+        sensor.AddObservation(lookAtLeft);
 
+        Debug.DrawRay(absRightEye, lookAtRight * Vector3.forward * 100, Color.red);
+        Debug.DrawRay(absLeftEye, lookAtLeft * Vector3.forward * 100, Color.green);
     }
 
     public override void OnActionReceived(float[] act)
@@ -133,6 +147,22 @@ public class HumanAgent : Agent
         }
         //Debug.Log("effort:" + effort + " action:" + action + "totalEffort:" + effort * action);
 
+        // Find focusPoint
+        Vector3 lookAt = head.rotation *
+            Quaternion.AngleAxis(Mathf.Clamp(act[action++], -1f, 1f), Vector3.right) *
+            Quaternion.AngleAxis(Mathf.Clamp(act[action++], -1f, 1f), Vector3.up) *
+            Vector3.forward;
+        Ray ray = new Ray(head.position, lookAt);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            focusPoint = head.position + lookAt * hit.distance;
+        }
+        else
+        {
+            focusPoint = blindFocus(head);
+        }
 
     }
 
@@ -181,6 +211,14 @@ public class HumanAgent : Agent
             AddReward(reward);
         }
         Monitor.Log("Reward", reward, MonitorType.slider, head);
+
+        Vector3 absRightEye = head.position + head.rotation * rightEye;
+        Vector3 absLeftEye = head.position + head.rotation * leftEye;
+        var lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, Vector3.up);
+        var lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, Vector3.up);
+
+        Debug.DrawRay(absRightEye, lookAtRight * Vector3.forward * 100, Color.red);
+        Debug.DrawRay(absLeftEye, lookAtLeft * Vector3.forward * 100, Color.green);
     }
 
     public override void OnEpisodeBegin()
@@ -274,5 +312,10 @@ public class HumanAgent : Agent
                 c = !c;
         }
         return c;
+    }
+
+    public static Vector3 blindFocus(Transform head)
+    {
+        return head.position + head.rotation * Vector3.forward * 100;
     }
 }
