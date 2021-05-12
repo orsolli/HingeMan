@@ -379,30 +379,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 59082349381245314, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.000000059604645
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Model
-      value: 
-      objectReference: {fileID: 5022602860645237092, guid: 0474425f6bbad5cac8458ba856223890, type: 3}
-    - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_InferenceDevice
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5538870942358736470, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_BrainParameters.VectorObservationSize
-      value: 90
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
 --- !u!4 &1849915646 stripped
