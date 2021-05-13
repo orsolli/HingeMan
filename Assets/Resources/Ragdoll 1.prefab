@@ -755,6 +755,7 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 5120
   strength: 400
+  gracePeriod: 500
   lowestHeight: 1.8
   highestHeight: 2.8
   clone: {fileID: 0}

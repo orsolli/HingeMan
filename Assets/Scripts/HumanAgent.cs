@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
@@ -20,7 +19,8 @@ public class HumanAgent : Agent
     private Dictionary<GameObject, Vector3>[] acceleration = new Dictionary<GameObject, Vector3>[5];
     private Dictionary<GameObject, Vector3>[] angular_acceleration = new Dictionary<GameObject, Vector3>[5];
     private int frame = 0;
-
+    public int gracePeriod = 500;
+    private int graceTimer;
     public float lowestHeight = 1.8f;
     public float highestHeight = 2.8f;
 
@@ -34,7 +34,7 @@ public class HumanAgent : Agent
     Vector3 rightEye = new Vector3(0.1f, 0f, 0.25f);
     Vector3 leftEye = new Vector3(-0.1f, 0f, 0.25f);
     Vector3 focusPoint = Vector3.forward;
-
+    System.Random rand = new System.Random();
     public override void Initialize()
     {
 
@@ -128,24 +128,15 @@ public class HumanAgent : Agent
 
     public override void OnActionReceived(float[] act)
     {
-        float effort = 0;
         int action = 0;
         foreach (HingeJoint limb in GetComponentsInChildren<HingeJoint>())
         {
             act[action] = Mathf.Clamp(act[action], -1f, 1f);
-            effort += Mathf.Pow(act[action], 2);
             JointMotor motor = limb.motor;
             motor.targetVelocity = act[action] * strength;
             limb.motor = motor;
             action++;
         }
-
-        // Collect reward
-        if (action > 0)
-        {
-            effort /= action;
-        }
-        //Debug.Log("effort:" + effort + " action:" + action + "totalEffort:" + effort * action);
 
         // Find focusPoint
         Vector3 lookAt = head.rotation *
@@ -197,20 +188,49 @@ public class HumanAgent : Agent
         avg_acceleration /= len;
         avg_velocity /= len;
         massCenter /= mass;
-        float reward = 1 - avg_acceleration / (100 * Physics.gravity.magnitude) - avg_velocity.magnitude; // Max 10G
+        float reward = 0.1f;
+        reward -= avg_acceleration / (10f * Physics.gravity.magnitude);
+        reward *= Mathf.Abs(reward);
+        reward -= 0.01f * avg_velocity.magnitude;
+        Monitor.Log("Move", reward, MonitorType.slider, head);
 
-        reward = Mathf.Clamp(reward, -1, 1);
-        float heightReward = (Vector3.Dot(massCenter, Vector3.up) - lowestHeight) / (highestHeight - lowestHeight);
-        if (heightReward < 0)
+        Transform footR = transform.Find("RightFoot");
+        Transform footL = transform.Find("LeftFoot");
+        float lowerPoint = Mathf.Min(footL.position.y, footR.position.y);
+        float heightReward = (head.position.y - lowerPoint - 3.0f) / 3f;
+        float headReward = (head.position.y - massCenter.y - 1.5f) / 1f;
+        if (heightReward < -0.1f || headReward < -0.1f)
         {
-            AddReward(-1f);
-            EndEpisode();
+            headReward /= 10;
+            heightReward /= 10;
+            reward = 0f;
+            if (--graceTimer < 0)
+            {
+                reward -= 1f;
+                EndEpisode();
+            }
         }
-        else
+        else if (graceTimer >= gracePeriod)
         {
-            AddReward(reward);
+            reward = reward * 0.1f + headReward;
         }
-        Monitor.Log("Reward", reward, MonitorType.slider, head);
+        else if (heightReward > 0.1f && headReward > 0.1f)
+        {
+            float redemption = 1f - (float)graceTimer / gracePeriod;
+            reward += redemption;
+            gracePeriod = (int)(gracePeriod * (1f + redemption));
+            graceTimer = gracePeriod;
+        }
+        if ((focusPoint - head.position).magnitude > 900f)
+        {
+            reward -= 0.01f;
+        }
+        reward += Mathf.Min(heightReward, headReward);
+        Monitor.Log("Height", heightReward, MonitorType.slider, head);
+        Monitor.Log("Head", headReward, MonitorType.slider, head);
+        reward = Mathf.Clamp(reward, -1f, 1f);
+        AddReward(reward);
+        Monitor.Log(gameObject.name, reward, MonitorType.slider, head);
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
@@ -223,10 +243,6 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        /*foreach (Collider limb in GetComponentsInChildren<Collider>())
-		{
-			grounded[limb.gameObject.name] = false;
-		}*/
         foreach (Transform limb in GetComponentsInChildren<Transform>())
         {
             limb.position = transformsPosition[limb.gameObject];
@@ -236,86 +252,12 @@ public class HumanAgent : Agent
         {
             limb.velocity = Vector3.zero;
         }
-    }
-
-
-    /**
-	* Three points are a counter-clockwise turn if ccw > 0, clockwise if
-	* ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
-	* gives twice the signed  area of the triangle formed by p1, p2 and p3.
-	*/
-    public static float ccw(Vector2 p1, Vector2 p2, Vector2 p3)
-    {
-        return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
-    }
-
-    public static Vector2[] bound(Vector3[] p)
-    {
-        int N = p.Length; //number of points
-        Vector2[] points = new Vector2[N];
-        int first = 0;
-        for (int i = 0; i < N; i++)
-        {
-            int furthest = 0;
-            float distance = Vector3.Distance(p[0], p[i]);
-            for (int j = 0; j < p.Length; j++)
-            {
-                if (Vector3.Distance(p[j], p[i]) > distance)
-                {
-                    furthest = j;
-                    distance = Vector3.Distance(p[furthest], p[i]);
-                }
-            }
-            float height = p[i].y;
-            float ratio = 1 - Mathf.Clamp(height, 0, distance) / distance;
-            Vector2 fromFurthestToCurrent = new Vector2(p[i].x, p[i].z) - new Vector2(p[furthest].x, p[furthest].z);
-            Vector2 shortened = fromFurthestToCurrent * ratio;
-            Vector2 finishTransform = shortened + new Vector2(p[furthest].x, p[furthest].z);
-            points[i] = finishTransform;
-            if (points[first].x > points[i].x)
-            {
-                first = i;
-            }
-        }
-
-        Vector2[] hull = new Vector2[points.Length];
-        Vector2 pointOnHull = points[first]; // which is guaranteed to be part of the CH(S)
-        Vector2 endpoint = Vector2.zero;
-
-        // wrapped around to first hull point
-        int L = 0;
-        for (int i = 0; endpoint != hull[0] || i == 0; i++, pointOnHull = endpoint)
-        {
-            hull[i] = pointOnHull;
-            endpoint = points[0];      // initial endpoint for a candidate edge on the hull
-            for (int j = 1; j < hull.Length; j++)
-            {
-                if (endpoint == pointOnHull || ccw(points[j], hull[i], endpoint) > 0)
-                    endpoint = points[j];   // found greater left turn, update endpoint
-            }
-            L = i;
-        }
-        Vector2[] result = new Vector2[L];
-        System.Array.Copy(hull, 0, result, 0, L);
-        return result;
-    }
-
-    public static bool within(Vector2[] hull, Vector2 test)
-    {
-        int N = hull.Length;
-        int i, j = 0;
-        bool c = false;
-        for (i = 0, j = N - 1; i < N; j = i++)
-        {
-            if (((hull[i].y > test.y) != (hull[j].y > test.y)) &&
-            (test.x < (hull[j].x - hull[i].x) * (test.y - hull[i].y) / (hull[j].y - hull[i].y) + hull[i].x))
-                c = !c;
-        }
-        return c;
+        focusPoint = blindFocus(head);
+        graceTimer = gracePeriod;
     }
 
     public static Vector3 blindFocus(Transform head)
     {
-        return head.position + head.rotation * Vector3.forward * 100;
+        return head.position + head.rotation * Vector3.forward * 1000;
     }
 }
