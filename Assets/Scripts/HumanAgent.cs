@@ -171,24 +171,21 @@ public class HumanAgent : Agent
                 acc +
                 angular_acc
             ) * part.mass;
-            //avg_velocity += part.velocity * part.mass;
 
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
         avg_acceleration /= len;
-        //avg_velocity /= len;
         massCenter /= mass;
         float reward = 0.1f;
         reward -= avg_acceleration.magnitude / (10f * Physics.gravity.magnitude);
         reward *= Mathf.Abs(reward);
-        //reward -= 0.01f * avg_velocity.magnitude;
         Monitor.Log("Move", reward, MonitorType.slider, head);
 
         Transform footR = transform.Find("RightFoot");
         Transform footL = transform.Find("LeftFoot");
         float lowerPoint = Mathf.Min(footL.position.y, footR.position.y);
-        float heightReward = (head.position.y - lowerPoint - 3.0f) / 3f;
+        float heightReward = (head.position.y - lowerPoint - 3.0f) / 6f;
         float headReward = (head.position.y - massCenter.y - 1.5f) / 1f;
         if (heightReward < -0.1f || headReward < -0.1f)
         {
@@ -209,14 +206,10 @@ public class HumanAgent : Agent
         {
             float redemption = 1f - (float)graceTimer / gracePeriod;
             reward += redemption;
-            gracePeriod = (int)(gracePeriod * (1f + redemption));
+            //gracePeriod = (int)(gracePeriod * (1f + redemption));
             graceTimer = gracePeriod;
         }
-        if ((focusPoint - head.position).magnitude > 900f)
-        {
-            reward -= 0.01f;
-        }
-        reward += Mathf.Min(heightReward, headReward);
+        reward += (heightReward + headReward) / 2;
         Monitor.Log("Height", heightReward, MonitorType.slider, head);
         Monitor.Log("Head", headReward, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -1f, 1f);
