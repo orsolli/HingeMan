@@ -6,14 +6,7 @@ using Unity.MLAgents.Sensors;
 public class HumanAgent : Agent
 {
 
-    //public GameObject tracer;
     Transform head;
-    public float strength = 1000;
-    //public int maxFailingSteps = 1024;
-    //public int failCounter = 0;
-    //public Dictionary<string, bool> grounded;
-    //private float[] lastAct = new float[18];
-    //public Vector3 sumNetForce = Vector3.zero;
     private Dictionary<GameObject, Vector3> velocity;
     private Dictionary<GameObject, Vector3> angular_velocity;
     private Dictionary<GameObject, Vector3>[] acceleration = new Dictionary<GameObject, Vector3>[5];
@@ -21,8 +14,6 @@ public class HumanAgent : Agent
     private int frame = 0;
     public int gracePeriod = 500;
     private int graceTimer;
-    public float lowestHeight = 1.8f;
-    public float highestHeight = 2.8f;
 
     public GameObject clone;
 
@@ -133,7 +124,7 @@ public class HumanAgent : Agent
         {
             act[action] = Mathf.Clamp(act[action], -1f, 1f);
             JointMotor motor = limb.motor;
-            motor.targetVelocity = act[action] * strength;
+            motor.targetVelocity = act[action] * 400;
             limb.motor = motor;
             action++;
         }
@@ -161,7 +152,7 @@ public class HumanAgent : Agent
     {
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
-        float avg_acceleration = 0f;
+        Vector3 avg_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
         foreach (Rigidbody part in GetComponentsInChildren<Rigidbody>())
@@ -177,21 +168,21 @@ public class HumanAgent : Agent
             len++;
             len++;
             avg_acceleration += (
-                acc.magnitude +
-                angular_acc.magnitude
+                acc +
+                angular_acc
             ) * part.mass;
-            avg_velocity += part.velocity * part.mass;
+            //avg_velocity += part.velocity * part.mass;
 
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
         avg_acceleration /= len;
-        avg_velocity /= len;
+        //avg_velocity /= len;
         massCenter /= mass;
         float reward = 0.1f;
-        reward -= avg_acceleration / (10f * Physics.gravity.magnitude);
+        reward -= avg_acceleration.magnitude / (10f * Physics.gravity.magnitude);
         reward *= Mathf.Abs(reward);
-        reward -= 0.01f * avg_velocity.magnitude;
+        //reward -= 0.01f * avg_velocity.magnitude;
         Monitor.Log("Move", reward, MonitorType.slider, head);
 
         Transform footR = transform.Find("RightFoot");
