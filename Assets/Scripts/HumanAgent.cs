@@ -13,7 +13,7 @@ public class HumanAgent : Agent
     private Dictionary<GameObject, Vector3>[] angular_acceleration = new Dictionary<GameObject, Vector3>[5];
     private int frame = 0;
     public int gracePeriod = 500;
-    private int graceTimer;
+    public int graceTimer;
 
     public GameObject clone;
 
@@ -22,8 +22,9 @@ public class HumanAgent : Agent
     Dictionary<GameObject, Quaternion> transformsRotation;
 
     // Eyes
-    Vector3 rightEye = new Vector3(0.1f, 0f, 0.25f);
-    Vector3 leftEye = new Vector3(-0.1f, 0f, 0.25f);
+    public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
+    public Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
+    public float height = 1.53f;
     Vector3 focusPoint = Vector3.forward;
     System.Random rand = new System.Random();
     public override void Initialize()
@@ -155,22 +156,21 @@ public class HumanAgent : Agent
         Vector3 avg_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
+        frame = (frame + 1) % 5;
         foreach (Rigidbody part in GetComponentsInChildren<Rigidbody>())
         {
             Vector3 acc = (part.velocity - velocity[part.gameObject]) / Time.fixedDeltaTime;
             Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject]) / Time.fixedDeltaTime;
             acceleration[frame][part.gameObject] = acc;
             angular_acceleration[frame][part.gameObject] = angular_acc;
-            frame = frame % 5;
             velocity[part.gameObject] = part.velocity;
             angular_velocity[part.gameObject] = part.angularVelocity;
 
             len++;
             len++;
             avg_acceleration += (
-                acc +
-                angular_acc
-            ) * part.mass;
+                acc
+            );
 
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
@@ -179,39 +179,44 @@ public class HumanAgent : Agent
         massCenter /= mass;
         float reward = 0.1f;
         reward -= avg_acceleration.magnitude / (10f * Physics.gravity.magnitude);
-        reward *= Mathf.Abs(reward);
         Monitor.Log("Move", reward, MonitorType.slider, head);
 
+        Vector3 acc_dir = (avg_acceleration - Physics.gravity).normalized;
         Transform footR = transform.Find("RightFoot");
         Transform footL = transform.Find("LeftFoot");
-        float lowerPoint = Mathf.Min(footL.position.y, footR.position.y);
-        float heightReward = (head.position.y - lowerPoint - 3.0f) / 6f;
-        float headReward = (head.position.y - massCenter.y - 1.5f) / 1f;
-        if (heightReward < -0.1f || headReward < -0.1f)
+        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, acc_dir), Vector3.Dot(footR.position, acc_dir));
+        float heightLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, acc_dir) - lowerPoint) / 0.8f); // (1.1 - 0.8)
+        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
+        float loss = (heightLoss + headLoss) / 2;
+        reward += 0.1f * loss;
+        if (heightLoss < -0.1f || headLoss < -0.1f)
         {
-            headReward /= 10;
-            heightReward /= 10;
-            reward = 0f;
-            if (--graceTimer < 0)
+            graceTimer += (int)(loss * 10f);
+            reward = -0.1f;
+            if (graceTimer < 0)
             {
                 reward -= 1f;
+                AddReward(reward);
                 EndEpisode();
+                return;
             }
         }
         else if (graceTimer >= gracePeriod)
         {
-            reward = reward * 0.1f + headReward;
+            reward = reward * 0.1f + headLoss;
         }
-        else if (heightReward > 0.1f && headReward > 0.1f)
+        else if (heightLoss > 0.1f && headLoss > 0.1f)
         {
             float redemption = 1f - (float)graceTimer / gracePeriod;
-            reward += redemption;
+            reward = 0.1f;
             //gracePeriod = (int)(gracePeriod * (1f + redemption));
-            graceTimer = gracePeriod;
+            if (++graceTimer == gracePeriod)
+            {
+                reward = 1f;
+            }
         }
-        reward += (heightReward + headReward) / 2;
-        Monitor.Log("Height", heightReward, MonitorType.slider, head);
-        Monitor.Log("Head", headReward, MonitorType.slider, head);
+        Monitor.Log("Height", heightLoss, MonitorType.slider, head);
+        Monitor.Log("Head", headLoss, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -1f, 1f);
         AddReward(reward);
         Monitor.Log(gameObject.name, reward, MonitorType.slider, head);
