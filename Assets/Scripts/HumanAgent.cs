@@ -5,7 +5,7 @@ using Unity.MLAgents.Sensors;
 
 public class HumanAgent : Agent
 {
-
+    float rotation_pct = 0;
     Transform head;
     private Dictionary<GameObject, Vector3> velocity;
     private Dictionary<GameObject, Vector3> angular_velocity;
@@ -27,9 +27,10 @@ public class HumanAgent : Agent
     public float height = 1.53f;
     Vector3 focusPoint = Vector3.forward;
     System.Random rand = new System.Random();
+    public Vector3 desired_acceleration = Vector3.zero;
     public override void Initialize()
     {
-
+        rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = transform.Find("Head");
         focusPoint = blindFocus(head);
 
@@ -86,7 +87,8 @@ public class HumanAgent : Agent
                 }
             }
         }
-
+        Vector3 relative_acc = head_rotation * desired_acceleration;
+        sensor.AddObservation(relative_acc);
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
         Vector3 avg_acc = Vector3.zero;
         Vector3 avg_angular_acc = Vector3.zero;
@@ -102,18 +104,13 @@ public class HumanAgent : Agent
         sensor.AddObservation(total_acceleration);
         Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
         sensor.AddObservation(total_angular_acceleration);
-        /*
-        Debug.DrawRay(Vector3.zero, total_acceleration);
-        Debug.DrawRay(Vector3.zero, total_angular_acceleration, Color.red);
-        Debug.DrawRay(head.position, head.position + avg_angular_acc, Color.red);
-        */
+
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
-        var lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, Vector3.up);
+        Quaternion lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, Vector3.up);
         sensor.AddObservation(lookAtRight);
-        var lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, Vector3.up);
+        Quaternion lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, Vector3.up);
         sensor.AddObservation(lookAtLeft);
-
         Debug.DrawRay(absRightEye, lookAtRight * Vector3.forward * 100, Color.red);
         Debug.DrawRay(absLeftEye, lookAtLeft * Vector3.forward * 100, Color.green);
     }
@@ -167,55 +164,60 @@ public class HumanAgent : Agent
             angular_velocity[part.gameObject] = part.angularVelocity;
 
             len++;
-            len++;
-            avg_acceleration += (
-                acc
-            );
+            avg_acceleration += acc * part.mass;
+
+            avg_velocity += part.velocity * part.mass;
 
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
-        avg_acceleration /= len;
+        avg_acceleration /= len * mass;
+        avg_velocity /= len * mass;
         massCenter /= mass;
-        float reward = 0.1f;
-        reward -= avg_acceleration.magnitude / (10f * Physics.gravity.magnitude);
-        Monitor.Log("Move", reward, MonitorType.slider, head);
 
-        Vector3 acc_dir = (avg_acceleration - Physics.gravity).normalized;
+        Vector3 direction = transform.rotation * Vector3.forward;
+        Vector3 desired_velocity = direction * rotation_pct;
+        Vector3 corrected_direction = (desired_velocity - avg_velocity);
+        float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
+        float acc_mag = 10f * Mathf.Clamp01((transform.position + head.position).magnitude / 100f) * speed_diff;
+        desired_acceleration = corrected_direction.normalized * acc_mag - Physics.gravity;
+
+        float reward = 0.1f;
+
+        float moveLoss = -Mathf.Clamp01((avg_acceleration - Physics.gravity - desired_acceleration).magnitude);
+        float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude) / 2);
+        Monitor.Log("Move", moveLoss, MonitorType.slider, head);
+        Monitor.Log("Direction", directionLoss, MonitorType.slider, head);
+        reward += moveLoss * 0.2f;
+        reward += directionLoss * 0.1f;
+
         Transform footR = transform.Find("RightFoot");
         Transform footL = transform.Find("LeftFoot");
-        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, acc_dir), Vector3.Dot(footR.position, acc_dir));
-        float heightLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, acc_dir) - lowerPoint) / 0.8f); // (1.1 - 0.8)
-        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
-        float loss = (heightLoss + headLoss) / 2;
-        reward += 0.1f * loss;
-        if (heightLoss < -0.1f || headLoss < -0.1f)
+        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, desired_acceleration), Vector3.Dot(footR.position, desired_acceleration));
+        float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, desired_acceleration) - lowerPoint) / 0.8f); // (1.1 - 0.8)
+        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, desired_acceleration) / 0.5f); // Acceptable range: (0.5 - 0.65)
+        float heightLoss = (footLoss + headLoss) / 2;
+        reward += heightLoss * 0.1f;
+        if (footLoss < -0.1f || headLoss < -0.1f)
         {
-            graceTimer += (int)(loss * 10f);
-            reward = -0.1f;
+            graceTimer -= 1 + (int)(gracePeriod / head.position.magnitude);
+            reward += -0.1f;
             if (graceTimer < 0)
             {
-                reward -= 1f;
+                reward = 1f;
                 AddReward(reward);
                 EndEpisode();
                 return;
             }
         }
-        else if (graceTimer >= gracePeriod)
+        else if (footLoss > 0.1f && headLoss > 0.1f)
         {
-            reward = reward * 0.1f + headLoss;
-        }
-        else if (heightLoss > 0.1f && headLoss > 0.1f)
-        {
-            float redemption = 1f - (float)graceTimer / gracePeriod;
-            reward = 0.1f;
-            //gracePeriod = (int)(gracePeriod * (1f + redemption));
             if (++graceTimer == gracePeriod)
             {
                 reward = 1f;
             }
         }
-        Monitor.Log("Height", heightLoss, MonitorType.slider, head);
+        Monitor.Log("Height", footLoss, MonitorType.slider, head);
         Monitor.Log("Head", headLoss, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -1f, 1f);
         AddReward(reward);
