@@ -48,7 +48,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 5120
+  MaxStep: 4096
   bodyPrefab: {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
   gracePeriod: 3
   graceTimer: 0
@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 5
+  DecisionPeriod: 15
   TakeActionsBetweenDecisions: 0
 --- !u!114 &5538870942358736470
 MonoBehaviour:

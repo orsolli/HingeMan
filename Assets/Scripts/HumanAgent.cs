@@ -9,11 +9,11 @@ public class HumanAgent : Agent
     GameObject body;
     float rotation_pct = 0;
     Transform head;
-    private Dictionary<GameObject, Vector3> velocity;
-    private Dictionary<GameObject, Vector3> angular_velocity;
-    private Dictionary<GameObject, Vector3>[] acceleration = new Dictionary<GameObject, Vector3>[5];
-    private Dictionary<GameObject, Vector3>[] angular_acceleration = new Dictionary<GameObject, Vector3>[5];
-    private int frame = 0;
+    private static int frames = 100;
+    private Dictionary<string, Vector3> velocity;
+    private Dictionary<string, Vector3> angular_velocity;
+    private Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
+    private Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
     public int gracePeriod = 3;
     public float graceTimer;
 
@@ -29,20 +29,20 @@ public class HumanAgent : Agent
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
 
-        velocity = new Dictionary<GameObject, Vector3>();
-        angular_velocity = new Dictionary<GameObject, Vector3>();
-        for (int i = 0; i < 5; i++)
+        velocity = new Dictionary<string, Vector3>();
+        angular_velocity = new Dictionary<string, Vector3>();
+        for (int i = 0; i < frames; i++)
         {
-            acceleration[i] = new Dictionary<GameObject, Vector3>();
-            angular_acceleration[i] = new Dictionary<GameObject, Vector3>();
+            acceleration[i] = new Dictionary<string, Vector3>();
+            angular_acceleration[i] = new Dictionary<string, Vector3>();
             foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
             {
-                acceleration[i][limb.gameObject] = Vector3.zero;
-                angular_acceleration[i][limb.gameObject] = Vector3.zero;
+                acceleration[i][limb.gameObject.name] = Vector3.zero;
+                angular_acceleration[i][limb.gameObject.name] = Vector3.zero;
                 if (i == 0)
                 {
-                    velocity[limb.gameObject] = Vector3.zero;
-                    angular_velocity[limb.gameObject] = Vector3.zero;
+                    velocity[limb.gameObject.name] = Vector3.zero;
+                    angular_velocity[limb.gameObject.name] = Vector3.zero;
                 }
             }
         }
@@ -66,13 +66,13 @@ public class HumanAgent : Agent
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
         Vector3 avg_acc = Vector3.zero;
         Vector3 avg_angular_acc = Vector3.zero;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < frames; i++)
         {
-            avg_acc += acceleration[i][head.gameObject];
-            avg_angular_acc += angular_acceleration[i][head.gameObject];
+            avg_acc += acceleration[i][head.gameObject.name] / frames;
+            avg_angular_acc += angular_acceleration[i][head.gameObject.name] / frames;
         }
-        avg_acc /= 5;
-        avg_angular_acc /= 5;
+        avg_acc /= frames;
+        avg_angular_acc /= frames;
         Vector3 total_acceleration = avg_acc - Physics.gravity;
         total_acceleration = head_rotation * total_acceleration;
         sensor.AddObservation(total_acceleration);
@@ -124,28 +124,33 @@ public class HumanAgent : Agent
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
         Vector3 avg_acceleration = Vector3.zero;
+        //Vector3 avg_ang_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
-        frame = (frame + 1) % 5;
+        int frame = StepCount % frames;
         foreach (Rigidbody part in body.GetComponentsInChildren<Rigidbody>())
         {
-            Vector3 acc = (part.velocity - velocity[part.gameObject]) / Time.fixedDeltaTime;
-            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject]) / Time.fixedDeltaTime;
-            acceleration[frame][part.gameObject] = acc;
-            angular_acceleration[frame][part.gameObject] = angular_acc;
-            velocity[part.gameObject] = part.velocity;
-            angular_velocity[part.gameObject] = part.angularVelocity;
+            Vector3 acc = (part.velocity - velocity[part.gameObject.name]) / Time.fixedDeltaTime;
+            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject.name]) / Time.fixedDeltaTime;
+            acceleration[frame][part.gameObject.name] = acc;
+            angular_acceleration[frame][part.gameObject.name] = angular_acc;
+            velocity[part.gameObject.name] = part.velocity;
+            angular_velocity[part.gameObject.name] = part.angularVelocity;
+
+            foreach (Dictionary<string, Vector3> prev_acc in acceleration)
+            {
+                avg_acceleration += prev_acc[part.gameObject.name] * part.mass / frames;
+            }
+            //avg_ang_acceleration += angular_acc * part.mass;
 
             len++;
-            avg_acceleration += acc * part.mass;
-            avg_acceleration += angular_acc * part.mass;
-
             avg_velocity += part.velocity * part.mass;
 
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
-        avg_acceleration /= 2f * len * mass;
+        avg_acceleration /= mass;
+        ////avg_ang_acceleration /= len * mass;
         avg_velocity /= len * mass;
         massCenter /= mass;
 
@@ -165,15 +170,16 @@ public class HumanAgent : Agent
         reward += moveLoss * 0.1f;
         reward += directionLoss * 0.1f;
 
+        Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
-        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, desired_acceleration), Vector3.Dot(footR.position, desired_acceleration));
-        float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, desired_acceleration) - lowerPoint) / 0.8f); // (0.8 - 1.1)
-        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, desired_acceleration) / 0.5f); // Acceptable range: (0.5 - 0.65)
+        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, des_acc_dir), Vector3.Dot(footR.position, des_acc_dir));
+        float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
+        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
         float heightLoss = (footLoss + headLoss) / 2;
         if (footLoss < -0.1f || headLoss < -0.1f)
         {
-            graceTimer -= Time.fixedDeltaTime * 10f / (head.position.magnitude + transform.position.magnitude);
+            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 10f / (head.position.magnitude + transform.position.magnitude);
             reward = -0.1f;
             if (graceTimer < 0)
             {
@@ -201,7 +207,7 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        DestroyImmediate(body);
+        Destroy(body);
         Initialize();
         focusPoint = blindFocus(head);
         graceTimer = gracePeriod;
