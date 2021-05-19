@@ -84,7 +84,7 @@ MonoBehaviour:
     VectorActionSize: 15000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
-  m_Model: {fileID: 5022602860645237092, guid: 0474425f6bbad5cac8458ba856223890, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 27770d404056f6feca9a2f052afa42bb, type: 3}
   m_InferenceDevice: 1
   m_BehaviorType: 0
   m_BehaviorName: Human
