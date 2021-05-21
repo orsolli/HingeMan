@@ -24,6 +24,20 @@ public class HumanAgent : Agent
     Vector3 desired_acceleration = Vector3.zero;
     public override void Initialize()
     {
+        try
+        {
+            if (transform.childCount > 0)
+            {
+                Destroy(transform.GetChild(0).gameObject);
+            }
+        }
+        finally
+        {
+
+        }
+    }
+    private void CreateBody()
+    {
         body = Instantiate(bodyPrefab, transform);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
@@ -78,6 +92,8 @@ public class HumanAgent : Agent
         sensor.AddObservation(total_acceleration);
         Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
         sensor.AddObservation(total_angular_acceleration);
+        Debug.DrawRay(head.position, head.rotation * total_acceleration, Color.red);
+        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration, Color.yellow);
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
@@ -179,7 +195,7 @@ public class HumanAgent : Agent
         float heightLoss = (footLoss + headLoss) / 2;
         if (footLoss < -0.1f || headLoss < -0.1f)
         {
-            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 10f / (head.position.magnitude + transform.position.magnitude);
+            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 20f / (head.position.magnitude + transform.position.magnitude);
             reward = -0.1f;
             if (graceTimer < 0)
             {
@@ -202,13 +218,15 @@ public class HumanAgent : Agent
         reward = Mathf.Clamp(reward, -1f, 1f);
         AddReward(reward);
         Monitor.Log(gameObject.name, reward, MonitorType.slider, head);
+        Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
+        Debug.DrawRay(head.position, head.rotation * avg_velocity, Color.green);
 
     }
 
     public override void OnEpisodeBegin()
     {
         Destroy(body);
-        Initialize();
+        CreateBody();
         focusPoint = blindFocus(head);
         graceTimer = gracePeriod;
     }
