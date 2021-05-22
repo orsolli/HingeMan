@@ -14,7 +14,7 @@ public class HumanAgent : Agent
     private Dictionary<string, Vector3> angular_velocity;
     private Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
     private Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
-    public int gracePeriod = 3;
+    public float gracePeriod = 1f;
     public float graceTimer;
 
     // Eyes
@@ -178,6 +178,7 @@ public class HumanAgent : Agent
         desired_acceleration = desired_velocity.normalized * acc_mag - Physics.gravity;
 
         float reward = 0.2f;
+        float progress = 0f;
 
         float moveLoss = -Mathf.Clamp01((avg_acceleration - Physics.gravity - desired_acceleration).magnitude);
         float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude) / 2);
@@ -205,14 +206,14 @@ public class HumanAgent : Agent
                 return;
             }
         }
-        else if (footLoss > 0.1f && headLoss > 0.1f)
+        else
         {
-            if (++graceTimer == gracePeriod)
-            {
-                reward = 1f;
-            }
+            graceTimer = gracePeriod;
+            progress = Mathf.Clamp01(0.1f * Vector3.Dot(body.transform.position + (footL.position + footR.position) / 2, direction) - 2);
         }
         reward += heightLoss * 0.1f;
+        reward += progress * 0.8f;
+        Monitor.Log("Position", progress, MonitorType.slider, head);
         Monitor.Log("Height", footLoss, MonitorType.slider, head);
         Monitor.Log("Head", headLoss, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -1f, 1f);
