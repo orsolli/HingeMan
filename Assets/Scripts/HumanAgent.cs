@@ -7,6 +7,11 @@ public class HumanAgent : Agent
 {
     public GameObject bodyPrefab;
     GameObject body;
+    public float saveStateInterval = 1f;
+    float saveStateTimer = 0;
+    GameObject pendingBody;
+    public List<GameObject> savedStates = new List<GameObject>();
+    int savedStateIndex = 0;
     float rotation_pct = 0;
     Transform head;
     private static int frames = 100;
@@ -24,6 +29,7 @@ public class HumanAgent : Agent
     Vector3 desired_acceleration = Vector3.zero;
     public override void Initialize()
     {
+        savedStates.Add(bodyPrefab);
         try
         {
             if (transform.childCount > 0)
@@ -38,7 +44,9 @@ public class HumanAgent : Agent
     }
     private void CreateBody()
     {
-        body = Instantiate(bodyPrefab, transform);
+        savedStateIndex = (savedStateIndex + 1) % savedStates.Count;
+        body = Instantiate(savedStates[savedStateIndex], transform);
+        body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
@@ -61,6 +69,16 @@ public class HumanAgent : Agent
             }
         }
 
+    }
+
+    private void saveState()
+    {
+        if (pendingBody != null)
+        {
+            savedStates.Add(pendingBody);
+        }
+        pendingBody = Instantiate(body, transform);
+        pendingBody.SetActive(false);
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -137,6 +155,7 @@ public class HumanAgent : Agent
 
     void FixedUpdate()
     {
+        saveStateTimer += Time.fixedDeltaTime;
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
         Vector3 avg_acceleration = Vector3.zero;
@@ -210,6 +229,11 @@ public class HumanAgent : Agent
         {
             graceTimer = gracePeriod;
             progress = Mathf.Clamp01(0.1f * Vector3.Dot(body.transform.position + (footL.position + footR.position) / 2, direction) - 2);
+            if (saveStateTimer > saveStateInterval)
+            {
+                saveStateTimer = 0;
+                saveState();
+            }
         }
         reward += heightLoss * 0.1f;
         reward += progress * 0.8f;
@@ -226,6 +250,9 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        Destroy(pendingBody);
+        pendingBody = null;
+        saveStateTimer = 0;
         Destroy(body);
         CreateBody();
         focusPoint = blindFocus(head);
