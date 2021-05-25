@@ -50,7 +50,12 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 4096
-  bodyPrefab: {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
+  saveStateInterval: 1
+  startPoses:
+  - {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
+  - {fileID: 8645034032407796753, guid: 0d85b7f786c10a1b8ad6f83dbcec864c, type: 3}
+  - {fileID: 5782289859600244412, guid: 787011dfe4ac42de3bdc44797c1137c8, type: 3}
+  - {fileID: 3448460930279293129, guid: 904ff907b46bd546baf3303aa16f76c9, type: 3}
   gracePeriod: 1
   graceTimer: 0
 --- !u!114 &-3583986954458886553

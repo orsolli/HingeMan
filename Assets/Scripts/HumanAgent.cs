@@ -5,13 +5,13 @@ using Unity.MLAgents.Sensors;
 
 public class HumanAgent : Agent
 {
-    public GameObject bodyPrefab;
     GameObject body;
     public float saveStateInterval = 1f;
     float saveStateTimer = 0;
     GameObject pendingBody;
-    public List<GameObject> savedStates = new List<GameObject>();
-    int savedStateIndex = 0;
+    int initialPoseSize;
+    public List<GameObject> startPoses = new List<GameObject>();
+    int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
     private static int frames = 100;
@@ -29,7 +29,7 @@ public class HumanAgent : Agent
     Vector3 desired_acceleration = Vector3.zero;
     public override void Initialize()
     {
-        savedStates.Add(bodyPrefab);
+        initialPoseSize = startPoses.Count;
         try
         {
             if (transform.childCount > 0)
@@ -44,8 +44,8 @@ public class HumanAgent : Agent
     }
     private void CreateBody()
     {
-        savedStateIndex = (savedStateIndex + 1) % savedStates.Count;
-        body = Instantiate(savedStates[savedStateIndex], transform);
+        poseIndex = (poseIndex + 1) % startPoses.Count;
+        body = Instantiate(startPoses[poseIndex], transform);
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
@@ -71,11 +71,25 @@ public class HumanAgent : Agent
 
     }
 
+
     private void saveState()
     {
         if (pendingBody != null)
         {
-            savedStates.Add(pendingBody);
+            int replaceIndex = poseIndex;
+            if (replaceIndex < initialPoseSize * 2)
+            {
+                replaceIndex += initialPoseSize;
+            }
+            if (startPoses.Count > replaceIndex)
+            {
+                Destroy(startPoses[replaceIndex]);
+                startPoses[replaceIndex] = pendingBody;
+            }
+            else
+            {
+                startPoses.Add(pendingBody);
+            }
         }
         pendingBody = Instantiate(body, transform);
         pendingBody.SetActive(false);
