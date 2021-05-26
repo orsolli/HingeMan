@@ -98,14 +98,11 @@ public class HumanAgent : Agent
     public override void CollectObservations(VectorSensor sensor)
     {
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
-        foreach (Collider limb in body.GetComponentsInChildren<Collider>())
+        foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
-            if (limb.gameObject.name != "Head")
-            {
-                Vector3 limbPos = limb.transform.position - head.position;
-                sensor.AddObservation(head_rotation * limbPos);
-                sensor.AddObservation(head_rotation * limb.transform.rotation);
-            }
+            float range = limb.limits.max - limb.limits.min;
+            JointSpring spring = limb.spring;
+            sensor.AddObservation(2 * (limb.angle - limb.limits.min) / range - 1);
         }
         Vector3 relative_acc = head_rotation * desired_acceleration;
         sensor.AddObservation(relative_acc);
