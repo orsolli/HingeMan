@@ -14,7 +14,7 @@ public class HumanAgent : Agent
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
-    private static int frames = 100;
+    private static int frames = 30;
     private Dictionary<string, Vector3> velocity;
     private Dictionary<string, Vector3> angular_velocity;
     private Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
@@ -213,12 +213,12 @@ public class HumanAgent : Agent
         float reward = 0.2f;
         float progress = 0f;
 
-        float moveLoss = -Mathf.Clamp01((avg_acceleration - Physics.gravity - desired_acceleration).magnitude);
-        float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude) / 2);
+        float moveLoss = -Mathf.Clamp01(avg_acceleration.magnitude - (Vector3.Dot(avg_acceleration, desired_acceleration + Physics.gravity) + 1f) / 2f);
+        float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude));
         Monitor.Log("Move", moveLoss, MonitorType.slider, head);
         Monitor.Log("Direction", directionLoss, MonitorType.slider, head);
         reward += moveLoss * 0.1f;
-        reward += directionLoss * 0.1f;
+        reward += directionLoss * 0.8f;
 
         Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
