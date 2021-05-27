@@ -230,7 +230,7 @@ public class HumanAgent : Agent
             reward = -0.1f;
             if (graceTimer < 0)
             {
-                reward = 1f;
+                reward = -1f;
                 AddReward(reward);
                 EndEpisode();
                 return;
