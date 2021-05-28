@@ -105,7 +105,7 @@ public class HumanAgent : Agent
             sensor.AddObservation(2 * (limb.angle - limb.limits.min) / range - 1);
         }
         Vector3 relative_acc = head_rotation * desired_acceleration;
-        sensor.AddObservation(relative_acc);
+        sensor.AddObservation(Vector3.ClampMagnitude(relative_acc / 100f, 1f));
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
         Vector3 avg_acc = Vector3.zero;
         Vector3 avg_angular_acc = Vector3.zero;
@@ -118,9 +118,9 @@ public class HumanAgent : Agent
         avg_angular_acc /= frames;
         Vector3 total_acceleration = avg_acc - Physics.gravity;
         total_acceleration = head_rotation * total_acceleration;
-        sensor.AddObservation(total_acceleration);
+        sensor.AddObservation(Vector3.ClampMagnitude(total_acceleration / 100f, 1f));
         Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
-        sensor.AddObservation(total_angular_acceleration);
+        sensor.AddObservation(Vector3.ClampMagnitude(total_angular_acceleration / 100f, 1f));
         Debug.DrawRay(head.position, head.rotation * total_acceleration, Color.red);
         Debug.DrawRay(head.position, head.rotation * total_angular_acceleration, Color.yellow);
 
@@ -199,12 +199,13 @@ public class HumanAgent : Agent
         ////avg_ang_acceleration /= len * mass;
         avg_velocity /= len * mass;
         massCenter /= mass;
+        massCenter -= body.transform.position;
 
         Vector3 direction = transform.rotation * Vector3.forward;
         Vector3 desired_velocity = direction * rotation_pct;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
-        float acc_mag = 10f * Mathf.Clamp01((transform.position + head.position).magnitude / 1000f) * speed_diff;
+        float acc_mag = 10f * Mathf.Clamp01((transform.localPosition + head.localPosition).magnitude / 1000f) * speed_diff;
         desired_acceleration = desired_velocity.normalized * acc_mag - Physics.gravity;
 
         float reward = 0.2f;
@@ -220,13 +221,13 @@ public class HumanAgent : Agent
         Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
-        float lowerPoint = Mathf.Min(Vector3.Dot(footL.position, des_acc_dir), Vector3.Dot(footR.position, des_acc_dir));
+        float lowerPoint = Mathf.Min(Vector3.Dot(footL.localPosition, des_acc_dir), Vector3.Dot(footR.localPosition, des_acc_dir));
         float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
-        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.position - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
+        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.localPosition - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
         float heightLoss = (footLoss + headLoss) / 2;
         if (footLoss < -0.1f || headLoss < -0.1f)
         {
-            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 20f / (head.position.magnitude + transform.position.magnitude);
+            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
             reward = -0.1f;
             if (graceTimer < 0)
             {
@@ -239,7 +240,7 @@ public class HumanAgent : Agent
         else
         {
             graceTimer = gracePeriod;
-            progress = Mathf.Clamp01(0.1f * Vector3.Dot(body.transform.position + (footL.position + footR.position) / 2, direction) - 2);
+            progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
             if (saveStateTimer > saveStateInterval)
             {
                 saveStateTimer = 0;
