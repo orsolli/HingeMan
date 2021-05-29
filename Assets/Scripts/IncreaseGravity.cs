@@ -11,6 +11,6 @@ public class IncreaseGravity : MonoBehaviour
     }
     public void UpdateGravity(int stepCount)
     {
-        Physics.gravity = new Vector3(0, -9.81f, 0) * Mathf.Clamp01((float)stepCount / timeToFullGravity);
+        Physics.gravity = new Vector3(0, -9.81f, 0) * Mathf.Clamp01(0.16f + 1000f * (stepCount / 1000) / timeToFullGravity);
     }
 }
