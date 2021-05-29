@@ -4,38 +4,11 @@ default:
   beta: 5.0e-3
   buffer_size: 20480
   epsilon: 0.2
-  hidden_units: 512
-  lambd: 0.95
-  learning_rate: 3.0e-4
-  learning_rate_schedule: linear
-  max_steps: 1.0e7
-  memory_size: 256
-  normalize: true
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 10000
-  use_recurrent: true
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.995
-
-smallbrain:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
   hidden_units: 128
   lambd: 0.95
   learning_rate: 3.0e-4
   learning_rate_schedule: linear
-  max_steps: 1.0e7
+  max_steps: 1.0e6
   memory_size: 64
   normalize: false
   num_epoch: 4
@@ -43,69 +16,15 @@ smallbrain:
   time_horizon: 64
   sequence_length: 64
   summary_freq: 10000
-  use_recurrent: true
-  vis_encode_type: simple
-  keep_checkpoints: 3
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.995
-
-shortsighted:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 512
-  lambd: 0.95
-  learning_rate: 3.0e-4
-  learning_rate_schedule: linear
-  max_steps: 1.0e7
-  memory_size: 256
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 10000
-  use_recurrent: true
+  use_recurrent: false
   vis_encode_type: simple
   keep_checkpoints: 2
   checkpoint_interval: 2e6
   reward_signals:
     extrinsic:
       strength: 1.0
-      gamma: 0.8
-
-curious:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 512
-  lambd: 0.95
-  learning_rate: 3.0e-4
-  learning_rate_schedule: linear
-  max_steps: 1.0e7
-  memory_size: 256
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 10000
-  use_recurrent: true
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 0.8
-      gamma: 0.995
+      gamma: 0.9
     curiosity:
-      strength: 0.2
+      strength: 0.05
       gamma: 0.99
       encoding_size: 64
