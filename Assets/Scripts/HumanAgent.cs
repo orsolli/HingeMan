@@ -21,6 +21,7 @@ public class HumanAgent : Agent
     private Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
     public float gracePeriod = 1f;
     public float graceTimer;
+    Queue<float> pendingRewards = new Queue<float>();
 
     // Eyes
     Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
@@ -126,9 +127,9 @@ public class HumanAgent : Agent
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
-        Quaternion lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, Vector3.up);
+        Quaternion lookAtRight = Quaternion.LookRotation(focusPoint - absRightEye, head.rotation * Vector3.up);
         sensor.AddObservation(lookAtRight);
-        Quaternion lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, Vector3.up);
+        Quaternion lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, head.rotation * Vector3.up);
         sensor.AddObservation(lookAtLeft);
     }
 
@@ -137,14 +138,14 @@ public class HumanAgent : Agent
         int action = 0;
         foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
-            act[action] = Mathf.Clamp(act[action], -1f, 1f);
-
+            float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
+            AddReward(-Mathf.Pow(springAction, 2) * 0.005f); // full strength on all 21 gives ca -0.1f. (0.1 * strength / 21)
+            float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
-            //spring.spring = 1000 * limb.GetComponent<Rigidbody>().mass / 60;
-            spring.targetPosition = (act[action] + 1f) / 2 * range + limb.limits.min;
+            spring.spring = springAction * 150;
+            spring.targetPosition = targetAction * range + limb.limits.min;
             limb.spring = spring;
-            action++;
 
         }
 
@@ -231,7 +232,12 @@ public class HumanAgent : Agent
             reward = -0.1f;
             if (graceTimer < 0)
             {
-                reward = -1f;
+                reward = 0;
+                foreach (float pastReward in pendingRewards)
+                {
+                    reward -= pastReward;
+                }
+                reward = -Mathf.Clamp01(-reward);
                 AddReward(reward);
                 EndEpisode();
                 return;
@@ -253,6 +259,14 @@ public class HumanAgent : Agent
         Monitor.Log("Height", footLoss, MonitorType.slider, head);
         Monitor.Log("Head", headLoss, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -1f, 1f);
+        if (reward > 0)
+        {
+            pendingRewards.Enqueue(reward);
+        }
+        if (pendingRewards.Count > 1f / Time.fixedDeltaTime)
+        {
+            pendingRewards.Dequeue();
+        }
         AddReward(reward);
         Monitor.Log(gameObject.name, reward, MonitorType.slider, head);
         Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
@@ -262,6 +276,7 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
+        pendingRewards = new Queue<float>();
         Destroy(pendingBody);
         pendingBody = null;
         saveStateTimer = 0;
