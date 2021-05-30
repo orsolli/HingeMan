@@ -139,7 +139,7 @@ public class HumanAgent : Agent
         foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
             float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            AddReward(-Mathf.Pow(springAction, 2) * 0.005f); // full strength on all 21 gives ca -0.1f. (0.1 * strength / 21)
+            AddReward(-Mathf.Pow(springAction, 2) * 0.02f); // full strength on all 21 gives ca -0.4f. (0.4 * strength / 21)
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
@@ -165,20 +165,29 @@ public class HumanAgent : Agent
 
     }
 
+    float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        saveStateTimer += Time.fixedDeltaTime;
+        if (body == null)
+        {
+            deltaTimeCumulative += Time.fixedDeltaTime;
+            return;
+        }
+        float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
+        deltaTimeCumulative = 0;
+        saveStateTimer += deltaTime;
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
         Vector3 avg_acceleration = Vector3.zero;
+        float avg_acceleration_mag = 0;
         //Vector3 avg_ang_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
         int frame = StepCount % frames;
         foreach (Rigidbody part in body.GetComponentsInChildren<Rigidbody>())
         {
-            Vector3 acc = (part.velocity - velocity[part.gameObject.name]) / Time.fixedDeltaTime;
-            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject.name]) / Time.fixedDeltaTime;
+            Vector3 acc = (part.velocity - velocity[part.gameObject.name]) / deltaTime;
+            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject.name]) / deltaTime;
             acceleration[frame][part.gameObject.name] = acc;
             angular_acceleration[frame][part.gameObject.name] = angular_acc;
             velocity[part.gameObject.name] = part.velocity;
@@ -187,6 +196,7 @@ public class HumanAgent : Agent
             foreach (Dictionary<string, Vector3> prev_acc in acceleration)
             {
                 avg_acceleration += prev_acc[part.gameObject.name] * part.mass / frames;
+                avg_acceleration_mag += prev_acc[part.gameObject.name].magnitude * part.mass / frames;
             }
             //avg_ang_acceleration += angular_acc * part.mass;
 
@@ -198,6 +208,7 @@ public class HumanAgent : Agent
         }
         avg_acceleration /= mass;
         ////avg_ang_acceleration /= len * mass;
+        avg_acceleration_mag /= len * mass;
         avg_velocity /= len * mass;
         massCenter /= mass;
         massCenter -= body.transform.position;
@@ -228,24 +239,24 @@ public class HumanAgent : Agent
         float heightLoss = (footLoss + headLoss) / 2;
         if (footLoss < -0.1f || headLoss < -0.1f)
         {
-            graceTimer -= Time.fixedDeltaTime * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
-            reward = -0.1f;
+            graceTimer -= deltaTime * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
+            SetReward(-1);
             if (graceTimer < 0)
             {
-                reward = 0;
-                foreach (float pastReward in pendingRewards)
-                {
-                    reward -= pastReward;
-                }
-                reward = -Mathf.Clamp01(-reward);
-                AddReward(reward);
                 EndEpisode();
-                return;
             }
+            Monitor.Log(gameObject.name, -1f, MonitorType.slider, head);
+            return;
         }
         else
         {
-            graceTimer = gracePeriod;
+            if (graceTimer < gracePeriod)
+            {
+                SetReward(1);
+                graceTimer = gracePeriod;
+                Monitor.Log(gameObject.name, 1f, MonitorType.slider, head);
+                return;
+            }
             progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
             if (saveStateTimer > saveStateInterval)
             {
@@ -253,17 +264,22 @@ public class HumanAgent : Agent
                 saveState();
             }
         }
-        reward += heightLoss * 0.1f;
         reward += progress * 0.8f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
-        Monitor.Log("Height", footLoss, MonitorType.slider, head);
-        Monitor.Log("Head", headLoss, MonitorType.slider, head);
+        if (rotation_pct < 0.01f)
+        {
+            reward = 0.2f - avg_acceleration_mag;
+        }
         reward = Mathf.Clamp(reward, -1f, 1f);
         if (reward > 0)
         {
             pendingRewards.Enqueue(reward);
         }
-        if (pendingRewards.Count > 1f / Time.fixedDeltaTime)
+        else
+        {
+            pendingRewards.Enqueue(0);
+        }
+        if (pendingRewards.Count > 1f / deltaTime)
         {
             pendingRewards.Dequeue();
         }
@@ -276,7 +292,7 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        pendingRewards = new Queue<float>();
+        pendingRewards.Clear();
         Destroy(pendingBody);
         pendingBody = null;
         saveStateTimer = 0;
