@@ -139,14 +139,13 @@ public class HumanAgent : Agent
         foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
             float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            AddReward(-Mathf.Pow(springAction, 2) * 0.02f); // full strength on all 21 gives ca -0.4f. (0.4 * strength / 21)
+            AddReward(-Mathf.Clamp01(-0.1f + Mathf.Pow(springAction, 2) * 0.02f)); // full strength on all 21 gives ca -0.3f.  -0.1 + (strength 0.4 * / 21)
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
             spring.spring = springAction * 150;
             spring.targetPosition = targetAction * range + limb.limits.min;
             limb.spring = spring;
-
         }
 
         // Find focusPoint
