@@ -139,7 +139,7 @@ public class HumanAgent : Agent
         foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
             float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            AddReward(-Mathf.Clamp01(-0.1f + Mathf.Pow(springAction, 2) * 0.02f)); // full strength on all 21 gives ca -0.3f.  -0.1 + (strength 0.4 * / 21)
+            //AddReward(-Mathf.Clamp01(-0.1f + Mathf.Pow(springAction, 2) * 0.02f)); // full strength on all 21 gives ca -0.3f.  -0.1 + (strength 0.4 * / 21)
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
@@ -219,26 +219,94 @@ public class HumanAgent : Agent
         float acc_mag = 10f * Mathf.Clamp01((transform.localPosition + head.localPosition).magnitude / 1000f) * speed_diff;
         desired_acceleration = desired_velocity.normalized * acc_mag - Physics.gravity;
 
-        float reward = 0.2f;
+        float reward = 0.01333f; // 0,01333
         float progress = 0f;
 
         float moveLoss = -Mathf.Clamp01(avg_acceleration.magnitude - (Vector3.Dot(avg_acceleration, desired_acceleration + Physics.gravity) + 1f) / 2f);
         float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude));
         Monitor.Log("Move", moveLoss, MonitorType.slider, head);
         Monitor.Log("Direction", directionLoss, MonitorType.slider, head);
-        reward += moveLoss * 0.1f;
-        reward += directionLoss * 0.8f;
+        reward += moveLoss * 0.00667f; // 0.006667
+        reward += directionLoss * 0.05333f; // 0.05333
 
         Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
+        // BalanceLoss
+
+        Vector3 sizeOfBalance = (footL.transform.position - footR.transform.position) / 2;
+        Vector3 centerOfMass = massCenter + body.transform.position;
+        Vector2 projectedMassCenter = new Vector2(centerOfMass.x, centerOfMass.z);
+
+        Vector3[] rFootVerts = footR.GetComponent<MeshFilter>().mesh.vertices;
+        Vector3[] lFootVerts = footL.GetComponent<MeshFilter>().mesh.vertices;
+        Vector2[] rFootVerts2 = new Vector2[lFootVerts.Length];
+        Vector2[] lFootVerts2 = new Vector2[lFootVerts.Length];
+        for (int i = 0; i < rFootVerts.Length; i++)
+        {
+            Vector3 v3 = footR.transform.localToWorldMatrix.MultiplyPoint(rFootVerts[i]);
+            rFootVerts2[i] = new Vector2(v3.x, v3.z);
+        }
+        for (int i = 0; i < lFootVerts.Length; i++)
+        {
+            Vector3 v3 = footL.transform.localToWorldMatrix.MultiplyPoint(lFootVerts[i]);
+            lFootVerts2[i] = new Vector2(v3.x, v3.z);
+        }
+        Vector2[] vertices = new Vector2[rFootVerts2.Length + lFootVerts2.Length];
+        rFootVerts2.CopyTo(vertices, 0);
+        lFootVerts2.CopyTo(vertices, rFootVerts2.Length);
+        Vector2[] hull = bound(vertices);
+#if false
+        int[] triangles = new int[hull.Length * 3];
+        for (int i = 3; i < hull.Length; i++)
+        {
+            int j = (i - 3) * 3;
+            triangles[j] = i - 1;
+            triangles[j + 1] = 0;
+            triangles[j + 2] = i - 2;
+
+        }
+        Vector3[] newVertices = new Vector3[hull.Length];
+        for (int i = 0; i < hull.Length; i++)
+        {
+            newVertices[i] = head.transform.worldToLocalMatrix.MultiplyPoint(new Vector3(hull[i].x, 0.01f, hull[i].y));
+
+        }
+        Mesh m = head.GetComponent<MeshFilter>().mesh;
+        m.Clear();
+        m.vertices = newVertices;
+        m.triangles = triangles;
+        m.uv = hull;
+#endif
+        bool innafor = within(hull, projectedMassCenter);
+
+        Vector3 centerOfBalance = sizeOfBalance + footR.transform.position;
+        float unBalance = Vector2.Distance(
+            new Vector2(centerOfBalance.x, centerOfBalance.z),
+            projectedMassCenter
+        );
+        float balanceLoss = innafor ? 0 : -1;
+        Vector2 footR2 = new Vector2(footR.transform.position.x, footR.transform.position.z);
+        Vector2 footL2 = new Vector2(footL.transform.position.x, footL.transform.position.z);
+        Vector3 footRV = footR.GetComponent<Rigidbody>().velocity;
+        Vector3 footLV = footL.GetComponent<Rigidbody>().velocity;
+        float balancingReward = Mathf.Max(
+            Vector3.Dot(new Vector2(footRV.x, footRV.z), projectedMassCenter - footR2),
+            Vector3.Dot(new Vector2(footLV.x, footLV.z), projectedMassCenter - footL2)
+        );
+        if (balanceLoss < 0 && balancingReward > 0.1f)
+        {
+            balanceLoss *= 0.5f;
+        }
+        Monitor.Log("Balance", balanceLoss, MonitorType.slider, head);
+        // HeightLoss
         float lowerPoint = Mathf.Min(Vector3.Dot(footL.localPosition, des_acc_dir), Vector3.Dot(footR.localPosition, des_acc_dir));
         float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
         float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.localPosition - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
         float heightLoss = (footLoss + headLoss) / 2;
-        if (footLoss < -0.1f || headLoss < -0.1f)
+        if (footLoss < -0.15f || headLoss < -0.151f)
         {
-            graceTimer -= deltaTime * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
+            graceTimer -= deltaTime; // * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
             SetReward(-1);
             if (graceTimer < 0)
             {
@@ -263,27 +331,12 @@ public class HumanAgent : Agent
                 saveState();
             }
         }
-        reward += progress * 0.8f;
+        reward += balanceLoss * 0.06667f; // 
+        reward += progress * 0.05333f; // 0.053333
         Monitor.Log("Position", progress, MonitorType.slider, head);
-        if (rotation_pct < 0.01f)
-        {
-            reward = 0.2f - avg_acceleration_mag;
-        }
-        reward = Mathf.Clamp(reward, -1f, 1f);
-        if (reward > 0)
-        {
-            pendingRewards.Enqueue(reward);
-        }
-        else
-        {
-            pendingRewards.Enqueue(0);
-        }
-        if (pendingRewards.Count > 1f / deltaTime)
-        {
-            pendingRewards.Dequeue();
-        }
+        reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward);
-        Monitor.Log(gameObject.name, reward, MonitorType.slider, head);
+        Monitor.Log(gameObject.name, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
         Debug.DrawRay(head.position, head.rotation * avg_velocity, Color.green);
 
@@ -291,7 +344,6 @@ public class HumanAgent : Agent
 
     public override void OnEpisodeBegin()
     {
-        pendingRewards.Clear();
         Destroy(pendingBody);
         pendingBody = null;
         saveStateTimer = 0;
@@ -304,5 +356,65 @@ public class HumanAgent : Agent
     public static Vector3 blindFocus(Transform head)
     {
         return head.position + head.rotation * Vector3.forward * 1000;
+    }
+
+    /**
+	* Three points are a counter-clockwise turn if ccw > 0, clockwise if
+	* ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
+	* gives twice the signed  area of the triangle formed by p1, p2 and p3.
+	*/
+    public static float ccw(Vector2 p1, Vector2 p2, Vector2 p3)
+    {
+        return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+    }
+
+    public static Vector2[] bound(Vector2[] p)
+    {
+        int N = p.Length; //number of points
+        Vector2[] points = new Vector2[N];
+        int first = 0;
+        for (int i = 0; i < N; i++)
+        {
+            points[i] = p[i];
+            if (points[first].x > points[i].x)
+            {
+                first = i;
+            }
+        }
+
+        Vector2[] hull = new Vector2[points.Length];
+        Vector2 pointOnHull = points[first]; // which is guaranteed to be part of the CH(S)
+        Vector2 endpoint = Vector2.zero;
+
+        // wrapped around to first hull point
+        int L = 0;
+        for (int i = 0; endpoint != hull[0] || i == 0; i++, pointOnHull = endpoint)
+        {
+            hull[i] = pointOnHull;
+            endpoint = points[0];      // initial endpoint for a candidate edge on the hull
+            for (int j = 1; j < hull.Length; j++)
+            {
+                if (endpoint == pointOnHull || ccw(points[j], hull[i], endpoint) > 0)
+                    endpoint = points[j];   // found greater left turn, update endpoint
+            }
+            L = i;
+        }
+        Vector2[] result = new Vector2[L];
+        System.Array.Copy(hull, 0, result, 0, L);
+        return result;
+    }
+
+    public static bool within(Vector2[] hull, Vector2 test)
+    {
+        int N = hull.Length;
+        int i, j = 0;
+        bool c = false;
+        for (i = 0, j = N - 1; i < N; j = i++)
+        {
+            if (((hull[i].y > test.y) != (hull[j].y > test.y)) &&
+            (test.x < (hull[j].x - hull[i].x) * (test.y - hull[i].y) / (hull[j].y - hull[i].y) + hull[i].x))
+                c = !c;
+        }
+        return c;
     }
 }
