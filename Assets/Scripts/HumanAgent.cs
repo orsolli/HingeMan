@@ -9,8 +9,12 @@ public class HumanAgent : Agent
     public float saveStateInterval = 1f;
     float saveStateTimer = 0;
     GameObject pendingBody;
+    Dictionary<string, Vector3> pendingVelocities;
+    Dictionary<string, Vector3> pendingAngularVelocities;
     int initialPoseSize;
     public List<GameObject> startPoses = new List<GameObject>();
+    public List<Dictionary<string, Vector3>> startVelocities = new List<Dictionary<string, Vector3>>();
+    public List<Dictionary<string, Vector3>> startAngularVelocities = new List<Dictionary<string, Vector3>>();
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
@@ -31,6 +35,11 @@ public class HumanAgent : Agent
     public override void Initialize()
     {
         initialPoseSize = startPoses.Count;
+        for (int i = 0; i < initialPoseSize; i++)
+        {
+            startVelocities.Add(getZeros(startPoses[poseIndex]));
+            startAngularVelocities.Add(getZeros(startPoses[poseIndex]));
+        }
         try
         {
             if (transform.childCount > 0)
@@ -47,29 +56,52 @@ public class HumanAgent : Agent
     {
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
+        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        {
+            limb.velocity = startVelocities[poseIndex][limb.gameObject.name];
+            limb.angularVelocity = startAngularVelocities[poseIndex][limb.gameObject.name];
+        }
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
 
-        velocity = new Dictionary<string, Vector3>();
-        angular_velocity = new Dictionary<string, Vector3>();
+        velocity = startVelocities[poseIndex];
+        angular_velocity = startAngularVelocities[poseIndex];
         for (int i = 0; i < frames; i++)
         {
-            acceleration[i] = new Dictionary<string, Vector3>();
-            angular_acceleration[i] = new Dictionary<string, Vector3>();
-            foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
-            {
-                acceleration[i][limb.gameObject.name] = Vector3.zero;
-                angular_acceleration[i][limb.gameObject.name] = Vector3.zero;
-                if (i == 0)
-                {
-                    velocity[limb.gameObject.name] = Vector3.zero;
-                    angular_velocity[limb.gameObject.name] = Vector3.zero;
-                }
-            }
+            acceleration[i] = getZeros(body);
+            angular_acceleration[i] = getZeros(body);
         }
 
+    }
+
+    private static Dictionary<string, Vector3> getZeros(GameObject body)
+    {
+        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
+        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        {
+            dict[limb.gameObject.name] = Vector3.zero;
+        }
+        return dict;
+    }
+    private static Dictionary<string, Vector3> getVelocities(GameObject body)
+    {
+        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
+        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        {
+            dict[limb.gameObject.name] = limb.velocity;
+        }
+        return dict;
+    }
+    private static Dictionary<string, Vector3> getAngularVelocities(GameObject body)
+    {
+        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
+        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        {
+            dict[limb.gameObject.name] = limb.angularVelocity;
+        }
+        return dict;
     }
 
 
@@ -90,8 +122,12 @@ public class HumanAgent : Agent
             else
             {
                 startPoses.Add(pendingBody);
+                startVelocities.Add(pendingVelocities);
+                startAngularVelocities.Add(pendingAngularVelocities);
             }
         }
+        pendingVelocities = getVelocities(body);
+        pendingAngularVelocities = getAngularVelocities(body);
         pendingBody = Instantiate(body, transform);
         pendingBody.SetActive(false);
     }
@@ -143,7 +179,7 @@ public class HumanAgent : Agent
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
-            spring.spring = springAction * 150;
+            spring.spring = springAction * 150 + 10;
             spring.targetPosition = targetAction * range + limb.limits.min;
             limb.spring = spring;
         }
@@ -255,7 +291,15 @@ public class HumanAgent : Agent
         Vector2[] vertices = new Vector2[rFootVerts2.Length + lFootVerts2.Length];
         rFootVerts2.CopyTo(vertices, 0);
         lFootVerts2.CopyTo(vertices, rFootVerts2.Length);
-        Vector2[] hull = bound(vertices);
+        Vector2[] hull = null;
+        try
+        {
+            hull = bound(vertices);
+        }
+        catch (System.IndexOutOfRangeException)
+        {
+            return;
+        }
 #if false
         int[] triangles = new int[hull.Length * 3];
         for (int i = 3; i < hull.Length; i++)
@@ -279,7 +323,6 @@ public class HumanAgent : Agent
         m.uv = hull;
 #endif
         bool innafor = within(hull, projectedMassCenter);
-
         Vector3 centerOfBalance = sizeOfBalance + footR.transform.position;
         float unBalance = Vector2.Distance(
             new Vector2(centerOfBalance.x, centerOfBalance.z),
