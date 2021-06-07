@@ -58,16 +58,20 @@ public class HumanAgent : Agent
         body = Instantiate(startPoses[poseIndex], transform);
         foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
         {
-            limb.velocity = startVelocities[poseIndex][limb.gameObject.name];
-            limb.angularVelocity = startAngularVelocities[poseIndex][limb.gameObject.name];
+            Vector3 sv = startVelocities[poseIndex][limb.gameObject.name];
+            limb.velocity = new Vector3(sv.x, sv.y, sv.z);
+
+            Vector3 sav = startAngularVelocities[poseIndex][limb.gameObject.name];
+            limb.angularVelocity = new Vector3(sav.x, sav.y, sav.z);
+
         }
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
 
-        velocity = startVelocities[poseIndex];
-        angular_velocity = startAngularVelocities[poseIndex];
+        velocity = getVelocities(body);
+        angular_velocity = getAngularVelocities(body);
         for (int i = 0; i < frames; i++)
         {
             acceleration[i] = getZeros(body);
@@ -118,6 +122,8 @@ public class HumanAgent : Agent
             {
                 Destroy(startPoses[replaceIndex]);
                 startPoses[replaceIndex] = pendingBody;
+                startVelocities[replaceIndex] = pendingVelocities;
+                startAngularVelocities[replaceIndex] = pendingAngularVelocities;
             }
             else
             {
@@ -179,7 +185,7 @@ public class HumanAgent : Agent
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
-            spring.spring = springAction * 150 + 10;
+            spring.spring = springAction * 150;
             spring.targetPosition = targetAction * range + limb.limits.min;
             limb.spring = spring;
         }
@@ -196,6 +202,15 @@ public class HumanAgent : Agent
         else
         {
             focusPoint = blindFocus(head);
+        }
+
+        // If in bad state, end episode before next action
+        if (graceTimer < gracePeriod)
+        {
+            if (graceTimer > 0.105f)
+            {
+                graceTimer = 0.1f;
+            }
         }
 
     }
@@ -255,15 +270,15 @@ public class HumanAgent : Agent
         float acc_mag = 10f * Mathf.Clamp01((transform.localPosition + head.localPosition).magnitude / 1000f) * speed_diff;
         desired_acceleration = desired_velocity.normalized * acc_mag - Physics.gravity;
 
-        float reward = 0.01333f; // 0,01333
+        float reward = 0.06667f;
         float progress = 0f;
 
         float moveLoss = -Mathf.Clamp01(avg_acceleration.magnitude - (Vector3.Dot(avg_acceleration, desired_acceleration + Physics.gravity) + 1f) / 2f);
         float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude));
         Monitor.Log("Move", moveLoss, MonitorType.slider, head);
         Monitor.Log("Direction", directionLoss, MonitorType.slider, head);
-        reward += moveLoss * 0.00667f; // 0.006667
-        reward += directionLoss * 0.05333f; // 0.05333
+        reward += moveLoss * 0.00667f;
+        reward += directionLoss * 0.05333f;
 
         Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
@@ -329,18 +344,25 @@ public class HumanAgent : Agent
             projectedMassCenter
         );
         float balanceLoss = innafor ? 0 : -1;
-        Vector2 footR2 = new Vector2(footR.transform.position.x, footR.transform.position.z);
-        Vector2 footL2 = new Vector2(footL.transform.position.x, footL.transform.position.z);
-        Vector3 footRV = footR.GetComponent<Rigidbody>().velocity;
-        Vector3 footLV = footL.GetComponent<Rigidbody>().velocity;
-        float balancingReward = Mathf.Max(
-            Vector3.Dot(new Vector2(footRV.x, footRV.z), projectedMassCenter - footR2),
-            Vector3.Dot(new Vector2(footLV.x, footLV.z), projectedMassCenter - footL2)
-        );
+        float balancingReward = 0;
+        if (footL.transform.position.y > footR.transform.position.y)
+        {
+            Vector2 footL2 = new Vector2(footL.transform.position.x, footL.transform.position.z);
+            Vector3 footLV = footL.GetComponent<Rigidbody>().velocity;
+            balancingReward = Vector3.Dot(new Vector2(footLV.x, footLV.z), projectedMassCenter - footL2);
+
+        }
+        else
+        {
+            Vector2 footR2 = new Vector2(footR.transform.position.x, footR.transform.position.z);
+            Vector3 footRV = footR.GetComponent<Rigidbody>().velocity;
+            balancingReward = Vector3.Dot(new Vector2(footRV.x, footRV.z), projectedMassCenter - footR2);
+        }
         if (balanceLoss < 0 && balancingReward > 0.1f)
         {
             balanceLoss *= 0.5f;
         }
+
         Monitor.Log("Balance", balanceLoss, MonitorType.slider, head);
         // HeightLoss
         float lowerPoint = Mathf.Min(Vector3.Dot(footL.localPosition, des_acc_dir), Vector3.Dot(footR.localPosition, des_acc_dir));
@@ -374,8 +396,8 @@ public class HumanAgent : Agent
                 saveState();
             }
         }
-        reward += balanceLoss * 0.06667f; // 
-        reward += progress * 0.05333f; // 0.053333
+        reward += balanceLoss * 0.06667f;
+        reward += progress * 0.05333f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward);
@@ -389,6 +411,8 @@ public class HumanAgent : Agent
     {
         Destroy(pendingBody);
         pendingBody = null;
+        pendingVelocities = null;
+        pendingAngularVelocities = null;
         saveStateTimer = 0;
         Destroy(body);
         CreateBody();
