@@ -180,11 +180,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -345,11 +349,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -707,11 +715,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -868,11 +880,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -1222,11 +1238,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -1895,11 +1915,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
@@ -2962,11 +2986,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: MaxStep
-      value: 600
+      value: 1200
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: gracePeriod
       value: 0.105
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: saveStateInterval
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: startPoses.Array.size
