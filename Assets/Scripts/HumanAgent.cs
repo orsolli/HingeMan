@@ -2,6 +2,7 @@
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
+using Unity.MLAgents.Policies;
 
 public class HumanAgent : Agent
 {
@@ -377,7 +378,7 @@ public class HumanAgent : Agent
             {
                 EndEpisode();
             }
-            Monitor.Log(gameObject.name, -1f, MonitorType.slider, head);
+            Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, -1f, MonitorType.slider, head);
             return;
         }
         else
@@ -386,7 +387,7 @@ public class HumanAgent : Agent
             {
                 SetReward(1);
                 graceTimer = gracePeriod;
-                Monitor.Log(gameObject.name, 1f, MonitorType.slider, head);
+                Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, 1f, MonitorType.slider, head);
                 return;
             }
             progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
@@ -401,7 +402,7 @@ public class HumanAgent : Agent
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward);
-        Monitor.Log(gameObject.name, reward * 15, MonitorType.slider, head);
+        Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
         Debug.DrawRay(head.position, head.rotation * avg_velocity, Color.green);
 
