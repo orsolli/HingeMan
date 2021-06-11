@@ -6,7 +6,7 @@ default:
   epsilon: 0.2
   hidden_units: 128
   lambd: 0.95
-  learning_rate: 1.0e-4
+  learning_rate: 3.0e-4
   learning_rate_schedule: linear
   max_steps: 5.0e6
   memory_size: 64
@@ -25,135 +25,6 @@ default:
       strength: 1.0
       gamma: 0.9
     curiosity:
-      strength: 0.05
-      gamma: 0.99
+      strength: 0.02
+      gamma: 0.8
       encoding_size: 64
-      learning_rate: 2.0e-4
-
-learnlow:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 128
-  lambd: 0.95
-  learning_rate: 1.0e-4
-  learning_rate_schedule: linear
-  max_steps: 5.0e6
-  memory_size: 64
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 20480
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.9
-    curiosity:
-      strength: 0.05
-      gamma: 0.99
-      encoding_size: 64
-      learning_rate: 1.5e-4
-
-learnlower:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 128
-  lambd: 0.95
-  learning_rate: 1.0e-4
-  learning_rate_schedule: linear
-  max_steps: 5.0e6
-  memory_size: 64
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 20480
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.9
-    curiosity:
-      strength: 0.05
-      gamma: 0.99
-      encoding_size: 64
-      learning_rate: 1.0e-4
-
-learnlowerer:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 128
-  lambd: 0.95
-  learning_rate: 1.0e-4
-  learning_rate_schedule: linear
-  max_steps: 5.0e6
-  memory_size: 64
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 20480
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.9
-    curiosity:
-      strength: 0.05
-      gamma: 0.99
-      encoding_size: 64
-      learning_rate: 5.0e-5
-
-learnlowest:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 128
-  lambd: 0.95
-  learning_rate: 1.0e-4
-  learning_rate_schedule: linear
-  max_steps: 5.0e6
-  memory_size: 64
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 64
-  sequence_length: 64
-  summary_freq: 20480
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.9
-    curiosity:
-      strength: 0.05
-      gamma: 0.99
-      encoding_size: 64
-      learning_rate: 1.5e-5
