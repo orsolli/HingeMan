@@ -58,7 +58,7 @@ MonoBehaviour:
   - {fileID: 3448460930279293129, guid: 904ff907b46bd546baf3303aa16f76c9, type: 3}
   - {fileID: 6163739686233816003, guid: ab20dd9fac6e65139b9ebc4bca52ca36, type: 3}
   - {fileID: 6163739686233816003, guid: 72ae5d9b0c64c364daf6d9e8e7d83ae6, type: 3}
-  gracePeriod: 1
+  gracePeriod: 0.105
   graceTimer: 0
 --- !u!114 &-3583986954458886553
 MonoBehaviour:
