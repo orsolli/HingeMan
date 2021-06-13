@@ -344,7 +344,6 @@ public class HumanAgent : Agent
             new Vector2(centerOfBalance.x, centerOfBalance.z),
             projectedMassCenter
         );
-        float balanceLoss = innafor ? 0 : -1;
         float balancingReward = 0;
         if (footL.transform.position.y > footR.transform.position.y)
         {
@@ -359,10 +358,7 @@ public class HumanAgent : Agent
             Vector3 footRV = footR.GetComponent<Rigidbody>().velocity;
             balancingReward = Vector3.Dot(new Vector2(footRV.x, footRV.z), projectedMassCenter - footR2);
         }
-        if (balanceLoss < 0 && balancingReward > 0.1f)
-        {
-            balanceLoss *= 0.5f;
-        }
+        float balanceLoss = innafor || balancingReward > 0 ? 0 : -1;
 
         Monitor.Log("Balance", balanceLoss, MonitorType.slider, head);
         // HeightLoss
@@ -370,38 +366,19 @@ public class HumanAgent : Agent
         float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
         float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.localPosition - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
         float heightLoss = (footLoss + headLoss) / 2;
-        if (footLoss < -0.15f || headLoss < -0.151f)
+        if (footLoss < -0.2f || headLoss < -0.2f)
         {
-            graceTimer -= deltaTime; // * (1 + rotation_pct) * 20f / (head.localPosition.magnitude + transform.localPosition.magnitude);
             SetReward(-1);
-            if (graceTimer < 0)
-            {
-                EndEpisode();
-            }
+            EndEpisode();
             Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, -1f, MonitorType.slider, head);
             return;
         }
-        else
-        {
-            if (graceTimer < gracePeriod)
-            {
-                SetReward(1);
-                graceTimer = gracePeriod;
-                Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, 1f, MonitorType.slider, head);
-                return;
-            }
-            progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
-            if (saveStateTimer > saveStateInterval)
-            {
-                saveStateTimer = 0;
-                saveState();
-            }
-        }
+        progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
         reward += balanceLoss * 0.06667f;
         reward += progress * 0.05333f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
-        AddReward(reward);
+        AddReward(reward * 0.1f);
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
         Debug.DrawRay(head.position, head.rotation * avg_velocity, Color.green);

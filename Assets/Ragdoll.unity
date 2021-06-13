@@ -182,18 +182,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
       value: 0.5000014
@@ -383,14 +371,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
       value: 0.5000013
@@ -575,18 +555,6 @@ PrefabInstance:
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
@@ -886,18 +854,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
       value: 0.5000002
@@ -1146,18 +1102,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
       value: 0.50000006
@@ -1357,18 +1301,6 @@ PrefabInstance:
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
@@ -1736,18 +1668,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
       value: 0.5000002
@@ -1933,14 +1853,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
-      objectReference: {fileID: 0}
     - target: {fileID: 4371988732278397252, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.z
       value: -0.000011920932
@@ -2009,18 +1921,6 @@ PrefabInstance:
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: MaxStep
-      value: 2400
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: saveStateInterval
-      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4371350381219488624, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_ConnectedAnchor.x
