@@ -7,6 +7,8 @@ using Unity.MLAgents.Policies;
 public class HumanAgent : Agent
 {
     GameObject body;
+    public float maxAcceleration = 3f;
+    public float maxSpeed = 10f;
     public float saveStateInterval = 1f;
     float saveStateTimer = 0;
     GameObject pendingBody;
@@ -230,8 +232,6 @@ public class HumanAgent : Agent
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
         Vector3 avg_acceleration = Vector3.zero;
-        float avg_acceleration_mag = 0;
-        //Vector3 avg_ang_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
         int frame = StepCount % frames;
@@ -247,9 +247,7 @@ public class HumanAgent : Agent
             foreach (Dictionary<string, Vector3> prev_acc in acceleration)
             {
                 avg_acceleration += prev_acc[part.gameObject.name] * part.mass / frames;
-                avg_acceleration_mag += prev_acc[part.gameObject.name].magnitude * part.mass / frames;
             }
-            //avg_ang_acceleration += angular_acc * part.mass;
 
             len++;
             avg_velocity += part.velocity * part.mass;
@@ -258,110 +256,33 @@ public class HumanAgent : Agent
             mass += part.mass;
         }
         avg_acceleration /= mass;
-        ////avg_ang_acceleration /= len * mass;
-        avg_acceleration_mag /= len * mass;
         avg_velocity /= len * mass;
         massCenter /= mass;
         massCenter -= body.transform.position;
 
         Vector3 direction = transform.rotation * Vector3.forward;
-        Vector3 desired_velocity = direction * rotation_pct;
+        Vector3 desired_velocity = direction * rotation_pct * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
-        float acc_mag = 10f * Mathf.Clamp01((transform.localPosition + head.localPosition).magnitude / 1000f) * speed_diff;
-        desired_acceleration = desired_velocity.normalized * acc_mag - Physics.gravity;
+        desired_acceleration = desired_velocity.normalized - Physics.gravity;
 
-        float reward = 0.06667f;
+        float reward = 0.03333f;
         float progress = 0f;
+        avg_acceleration -= Physics.gravity;
+        float accLoss = desired_acceleration.sqrMagnitude - (Vector3.Dot(avg_acceleration, desired_acceleration) - Vector3.Cross(avg_acceleration, desired_acceleration).magnitude);
+        float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) - Vector3.Cross(avg_velocity, desired_velocity).magnitude);
 
-        float moveLoss = -Mathf.Clamp01(avg_acceleration.magnitude - (Vector3.Dot(avg_acceleration, desired_acceleration + Physics.gravity) + 1f) / 2f);
-        float directionLoss = -Mathf.Clamp01(-(Vector3.Dot(avg_velocity, desired_velocity) - avg_velocity.magnitude));
-        Monitor.Log("Move", moveLoss, MonitorType.slider, head);
-        Monitor.Log("Direction", directionLoss, MonitorType.slider, head);
-        reward += moveLoss * 0.00667f;
-        reward += directionLoss * 0.05333f;
+        accLoss = Mathf.Clamp(accLoss / Mathf.Pow(maxAcceleration + Physics.gravity.magnitude, 2), -1f, 1f);
+        velLoss = Mathf.Clamp(velLoss / Mathf.Pow(maxSpeed, 2), -1f, 1f);
+        Monitor.Log("Acceleration", -accLoss, MonitorType.slider, head);
+        Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
+        reward -= accLoss * 0.01666f;
+        reward -= velLoss * 0.01666f;
 
-        Vector3 des_acc_dir = desired_acceleration.normalized;
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
-        // BalanceLoss
-
-        Vector3 sizeOfBalance = (footL.transform.position - footR.transform.position) / 2;
-        Vector3 centerOfMass = massCenter + body.transform.position;
-        Vector2 projectedMassCenter = new Vector2(centerOfMass.x, centerOfMass.z);
-
-        Vector3[] rFootVerts = footR.GetComponent<MeshFilter>().mesh.vertices;
-        Vector3[] lFootVerts = footL.GetComponent<MeshFilter>().mesh.vertices;
-        Vector2[] rFootVerts2 = new Vector2[lFootVerts.Length];
-        Vector2[] lFootVerts2 = new Vector2[lFootVerts.Length];
-        for (int i = 0; i < rFootVerts.Length; i++)
-        {
-            Vector3 v3 = footR.transform.localToWorldMatrix.MultiplyPoint(rFootVerts[i]);
-            rFootVerts2[i] = new Vector2(v3.x, v3.z);
-        }
-        for (int i = 0; i < lFootVerts.Length; i++)
-        {
-            Vector3 v3 = footL.transform.localToWorldMatrix.MultiplyPoint(lFootVerts[i]);
-            lFootVerts2[i] = new Vector2(v3.x, v3.z);
-        }
-        Vector2[] vertices = new Vector2[rFootVerts2.Length + lFootVerts2.Length];
-        rFootVerts2.CopyTo(vertices, 0);
-        lFootVerts2.CopyTo(vertices, rFootVerts2.Length);
-        Vector2[] hull = null;
-        try
-        {
-            hull = bound(vertices);
-        }
-        catch (System.IndexOutOfRangeException)
-        {
-            return;
-        }
-#if false
-        int[] triangles = new int[hull.Length * 3];
-        for (int i = 3; i < hull.Length; i++)
-        {
-            int j = (i - 3) * 3;
-            triangles[j] = i - 1;
-            triangles[j + 1] = 0;
-            triangles[j + 2] = i - 2;
-
-        }
-        Vector3[] newVertices = new Vector3[hull.Length];
-        for (int i = 0; i < hull.Length; i++)
-        {
-            newVertices[i] = head.transform.worldToLocalMatrix.MultiplyPoint(new Vector3(hull[i].x, 0.01f, hull[i].y));
-
-        }
-        Mesh m = head.GetComponent<MeshFilter>().mesh;
-        m.Clear();
-        m.vertices = newVertices;
-        m.triangles = triangles;
-        m.uv = hull;
-#endif
-        bool innafor = within(hull, projectedMassCenter);
-        Vector3 centerOfBalance = sizeOfBalance + footR.transform.position;
-        float unBalance = Vector2.Distance(
-            new Vector2(centerOfBalance.x, centerOfBalance.z),
-            projectedMassCenter
-        );
-        float balancingReward = 0;
-        if (footL.transform.position.y > footR.transform.position.y)
-        {
-            Vector2 footL2 = new Vector2(footL.transform.position.x, footL.transform.position.z);
-            Vector3 footLV = footL.GetComponent<Rigidbody>().velocity;
-            balancingReward = Vector3.Dot(new Vector2(footLV.x, footLV.z), projectedMassCenter - footL2);
-
-        }
-        else
-        {
-            Vector2 footR2 = new Vector2(footR.transform.position.x, footR.transform.position.z);
-            Vector3 footRV = footR.GetComponent<Rigidbody>().velocity;
-            balancingReward = Vector3.Dot(new Vector2(footRV.x, footRV.z), projectedMassCenter - footR2);
-        }
-        float balanceLoss = innafor || balancingReward > 0 ? 0 : -1;
-
-        Monitor.Log("Balance", balanceLoss, MonitorType.slider, head);
         // HeightLoss
+        Vector3 des_acc_dir = desired_acceleration.normalized;
         float lowerPoint = Mathf.Min(Vector3.Dot(footL.localPosition, des_acc_dir), Vector3.Dot(footR.localPosition, des_acc_dir));
         float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
         float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.localPosition - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
@@ -374,14 +295,13 @@ public class HumanAgent : Agent
             return;
         }
         progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
-        reward += balanceLoss * 0.06667f;
         reward += progress * 0.05333f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward * 0.1f);
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
-        Debug.DrawRay(head.position, head.rotation * avg_acceleration - Physics.gravity, Color.red);
-        Debug.DrawRay(head.position, head.rotation * avg_velocity, Color.green);
+        Debug.DrawRay(head.position, avg_acceleration, Color.red);
+        Debug.DrawRay(head.position, avg_velocity, Color.green);
 
     }
 
@@ -401,65 +321,5 @@ public class HumanAgent : Agent
     public static Vector3 blindFocus(Transform head)
     {
         return head.position + head.rotation * Vector3.forward * 1000;
-    }
-
-    /**
-	* Three points are a counter-clockwise turn if ccw > 0, clockwise if
-	* ccw < 0, and collinear if ccw = 0 because ccw is a determinant that
-	* gives twice the signed  area of the triangle formed by p1, p2 and p3.
-	*/
-    public static float ccw(Vector2 p1, Vector2 p2, Vector2 p3)
-    {
-        return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
-    }
-
-    public static Vector2[] bound(Vector2[] p)
-    {
-        int N = p.Length; //number of points
-        Vector2[] points = new Vector2[N];
-        int first = 0;
-        for (int i = 0; i < N; i++)
-        {
-            points[i] = p[i];
-            if (points[first].x > points[i].x)
-            {
-                first = i;
-            }
-        }
-
-        Vector2[] hull = new Vector2[points.Length];
-        Vector2 pointOnHull = points[first]; // which is guaranteed to be part of the CH(S)
-        Vector2 endpoint = Vector2.zero;
-
-        // wrapped around to first hull point
-        int L = 0;
-        for (int i = 0; endpoint != hull[0] || i == 0; i++, pointOnHull = endpoint)
-        {
-            hull[i] = pointOnHull;
-            endpoint = points[0];      // initial endpoint for a candidate edge on the hull
-            for (int j = 1; j < hull.Length; j++)
-            {
-                if (endpoint == pointOnHull || ccw(points[j], hull[i], endpoint) > 0)
-                    endpoint = points[j];   // found greater left turn, update endpoint
-            }
-            L = i;
-        }
-        Vector2[] result = new Vector2[L];
-        System.Array.Copy(hull, 0, result, 0, L);
-        return result;
-    }
-
-    public static bool within(Vector2[] hull, Vector2 test)
-    {
-        int N = hull.Length;
-        int i, j = 0;
-        bool c = false;
-        for (i = 0, j = N - 1; i < N; j = i++)
-        {
-            if (((hull[i].y > test.y) != (hull[j].y > test.y)) &&
-            (test.x < (hull[j].x - hull[i].x) * (test.y - hull[i].y) / (hull[j].y - hull[i].y) + hull[i].x))
-                c = !c;
-        }
-        return c;
     }
 }
