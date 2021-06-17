@@ -7,7 +7,6 @@ using Unity.MLAgents.Policies;
 public class HumanAgent : Agent
 {
     GameObject body;
-    public float maxAcceleration = 3f;
     public float maxSpeed = 10f;
     public float saveStateInterval = 1f;
     float saveStateTimer = 0;
@@ -231,7 +230,6 @@ public class HumanAgent : Agent
         saveStateTimer += deltaTime;
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
-        Vector3 avg_acceleration = Vector3.zero;
         Vector3 avg_velocity = Vector3.zero;
         int len = 0;
         int frame = StepCount % frames;
@@ -244,10 +242,6 @@ public class HumanAgent : Agent
             velocity[part.gameObject.name] = part.velocity;
             angular_velocity[part.gameObject.name] = part.angularVelocity;
 
-            foreach (Dictionary<string, Vector3> prev_acc in acceleration)
-            {
-                avg_acceleration += prev_acc[part.gameObject.name] * part.mass / frames;
-            }
 
             len++;
             avg_velocity += part.velocity * part.mass;
@@ -255,7 +249,6 @@ public class HumanAgent : Agent
             massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
-        avg_acceleration /= mass;
         avg_velocity /= len * mass;
         massCenter /= mass;
         massCenter -= body.transform.position;
@@ -268,16 +261,11 @@ public class HumanAgent : Agent
 
         float reward = 0.03333f;
         float progress = 0f;
-        avg_acceleration -= Physics.gravity;
-        float accLoss = desired_acceleration.sqrMagnitude - (Vector3.Dot(avg_acceleration, desired_acceleration) - Vector3.Cross(avg_acceleration, desired_acceleration).magnitude);
         float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) - Vector3.Cross(avg_velocity, desired_velocity).magnitude);
 
-        accLoss = Mathf.Clamp(accLoss / Mathf.Pow(maxAcceleration + Physics.gravity.magnitude, 2), -1f, 1f);
         velLoss = Mathf.Clamp(velLoss / Mathf.Pow(maxSpeed, 2), -1f, 1f);
-        Monitor.Log("Acceleration", -accLoss, MonitorType.slider, head);
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
-        reward -= accLoss * 0.01666f;
-        reward -= velLoss * 0.01666f;
+        reward -= velLoss * 0.03333f;
 
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
@@ -300,7 +288,6 @@ public class HumanAgent : Agent
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward * 0.1f);
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
-        Debug.DrawRay(head.position, avg_acceleration, Color.red);
         Debug.DrawRay(head.position, avg_velocity, Color.green);
 
     }
