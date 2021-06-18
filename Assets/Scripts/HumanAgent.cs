@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
@@ -257,7 +257,7 @@ public class HumanAgent : Agent
         Vector3 desired_velocity = direction * rotation_pct * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
-        desired_acceleration = desired_velocity.normalized - Physics.gravity;
+        desired_acceleration = desired_velocity - Physics.gravity;
 
         float reward = 0.03333f;
         float progress = 0f;

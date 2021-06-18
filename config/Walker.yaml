@@ -25,6 +25,6 @@ default:
       strength: 1.0
       gamma: 0.9
     curiosity:
-      strength: 0.03
+      strength: 0.04
       gamma: 0.8
       encoding_size: 64
