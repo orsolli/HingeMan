@@ -789,12 +789,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 489709912}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f23c1e954bc7c381ae5d5fdd5778a01, type: 3}
+  m_Script: {fileID: 11500000, guid: 1da0d3d0ff8de23c2a003af506684078, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timeToFullGravity: 1000000
 --- !u!1001 &678333558
 PrefabInstance:
   m_ObjectHideFlags: 0

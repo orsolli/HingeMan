@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
@@ -33,7 +33,8 @@ public class HumanAgent : Agent
     Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
     Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
     Vector3 focusPoint = Vector3.forward;
-    Vector3 desired_acceleration = Vector3.zero;
+    Vector3 desired_acceleration = -Physics.gravity;
+    bool rightStep = true;
     public override void Initialize()
     {
         initialPoseSize = startPoses.Count;
@@ -58,15 +59,12 @@ public class HumanAgent : Agent
     {
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
-        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        for (int i = 14; i < 22 && i > 5; i += rightStep ? -1 : 1)
         {
-            Vector3 sv = startVelocities[poseIndex][limb.gameObject.name];
-            limb.velocity = new Vector3(sv.x, sv.y, sv.z);
-
-            Vector3 sav = startAngularVelocities[poseIndex][limb.gameObject.name];
-            limb.angularVelocity = new Vector3(sav.x, sav.y, sav.z);
-
+            Vector3 sv = desired_acceleration + Physics.gravity;
+            body.transform.GetChild(i).GetComponent<Rigidbody>().velocity = new Vector3(sv.x, sv.y, sv.z);
         }
+        rightStep = !rightStep;
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
@@ -269,19 +267,6 @@ public class HumanAgent : Agent
 
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
-        // HeightLoss
-        Vector3 des_acc_dir = desired_acceleration.normalized;
-        float lowerPoint = Mathf.Min(Vector3.Dot(footL.localPosition, des_acc_dir), Vector3.Dot(footR.localPosition, des_acc_dir));
-        float footLoss = -1f + Mathf.Clamp01((Vector3.Dot(massCenter, des_acc_dir) - lowerPoint) / 0.8f); // (0.8 - 1.1)
-        float headLoss = -1f + Mathf.Clamp01(Vector3.Dot(head.localPosition - massCenter, des_acc_dir) / 0.5f); // Acceptable range: (0.5 - 0.65)
-        float heightLoss = (footLoss + headLoss) / 2;
-        if (footLoss < -0.2f || headLoss < -0.2f)
-        {
-            SetReward(-1);
-            EndEpisode();
-            Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, -1f, MonitorType.slider, head);
-            return;
-        }
         progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
         reward += progress * 0.05333f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
@@ -290,6 +275,12 @@ public class HumanAgent : Agent
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, avg_velocity, Color.green);
 
+    }
+
+    public void Fall()
+    {
+        SetReward(-1);
+        EndEpisode();
     }
 
     public override void OnEpisodeBegin()
