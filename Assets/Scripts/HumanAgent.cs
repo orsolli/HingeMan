@@ -258,17 +258,17 @@ public class HumanAgent : Agent
         desired_acceleration = desired_velocity - Physics.gravity;
 
         float reward = 0.03333f;
-        float progress = 0f;
         float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) - Vector3.Cross(avg_velocity, desired_velocity).magnitude);
 
-        velLoss = Mathf.Clamp(velLoss / Mathf.Pow(maxSpeed, 2), -1f, 1f);
+        velLoss = Mathf.Clamp01(velLoss / Mathf.Max(desired_velocity.sqrMagnitude, 1f));
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
-        reward -= velLoss * 0.03333f;
+        reward -= Mathf.Pow(velLoss, 2) * 0.01666f;
 
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
-        progress = Mathf.Clamp01(0.1f * Vector3.Dot(transform.localPosition + (footL.localPosition + footR.localPosition) / 2, direction) - 2);
-        reward += progress * 0.05333f;
+        Vector3 position = (footL.position + footR.position) / 2;
+        float progress = 1 - Mathf.Clamp01((transform.position + desired_velocity * 0.1f).magnitude - position.magnitude);
+        reward += Mathf.Pow(progress, 2) * 0.01666f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward * 0.1f);
