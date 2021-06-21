@@ -95,7 +95,6 @@ GameObject:
   - component: {fileID: 3318074748908785368}
   - component: {fileID: 3344771109625225480}
   - component: {fileID: 3335222105610880166}
-  - component: {fileID: 3385210243733714554}
   - component: {fileID: 3376719601246671710}
   - component: {fileID: 3372849774993167888}
   m_Layer: 0
@@ -168,19 +167,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3385210243733714554
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3321631069515291544}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1.75, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &3376719601246671710
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2012,7 +1998,6 @@ GameObject:
   - component: {fileID: 3319958015107613964}
   - component: {fileID: 3344987001998271052}
   - component: {fileID: 3336758827551503466}
-  - component: {fileID: 3385224921801296038}
   - component: {fileID: 3376776203899664314}
   m_Layer: 0
   m_Name: Pelvis
@@ -2084,19 +2069,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3385224921801296038
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3322360484508382574}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1.25}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &3376776203899664314
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -34,6 +34,7 @@ public class HumanAgent : Agent
     Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
     Vector3 focusPoint = Vector3.forward;
     Vector3 desired_acceleration = -Physics.gravity;
+    public Vector3 avg_velocity;
     bool rightStep = true;
     public override void Initialize()
     {
@@ -54,6 +55,7 @@ public class HumanAgent : Agent
         {
 
         }
+        CreateBody();
     }
     private void CreateBody()
     {
@@ -106,36 +108,6 @@ public class HumanAgent : Agent
             dict[limb.gameObject.name] = limb.angularVelocity;
         }
         return dict;
-    }
-
-
-    private void saveState()
-    {
-        if (pendingBody != null)
-        {
-            int replaceIndex = poseIndex;
-            if (replaceIndex < initialPoseSize * 2)
-            {
-                replaceIndex += initialPoseSize;
-            }
-            if (startPoses.Count > replaceIndex)
-            {
-                Destroy(startPoses[replaceIndex]);
-                startPoses[replaceIndex] = pendingBody;
-                startVelocities[replaceIndex] = pendingVelocities;
-                startAngularVelocities[replaceIndex] = pendingAngularVelocities;
-            }
-            else
-            {
-                startPoses.Add(pendingBody);
-                startVelocities.Add(pendingVelocities);
-                startAngularVelocities.Add(pendingAngularVelocities);
-            }
-        }
-        pendingVelocities = getVelocities(body);
-        pendingAngularVelocities = getAngularVelocities(body);
-        pendingBody = Instantiate(body, transform);
-        pendingBody.SetActive(false);
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -201,6 +173,7 @@ public class HumanAgent : Agent
         }
         else
         {
+            SetReward(-1);
             focusPoint = blindFocus(head);
         }
 
@@ -228,7 +201,7 @@ public class HumanAgent : Agent
         saveStateTimer += deltaTime;
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
-        Vector3 avg_velocity = Vector3.zero;
+        avg_velocity = Vector3.zero;
         int len = 0;
         int frame = StepCount % frames;
         foreach (Rigidbody part in body.GetComponentsInChildren<Rigidbody>())
@@ -257,43 +230,62 @@ public class HumanAgent : Agent
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
         desired_acceleration = desired_velocity - Physics.gravity;
 
-        float reward = 0.03333f;
+        float reward = 0.00166f;
         float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) - Vector3.Cross(avg_velocity, desired_velocity).magnitude);
 
         velLoss = Mathf.Clamp01(velLoss / Mathf.Max(desired_velocity.sqrMagnitude, 1f));
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
-        reward -= Mathf.Pow(velLoss, 2) * 0.01666f;
+        reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
+        if (velLoss > 0.99f && avg_velocity.magnitude < 0.02f)
+        {
+            Stop();
+        }
 
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
         Vector3 position = (footL.position + footR.position) / 2;
         float progress = 1 - Mathf.Clamp01((transform.position + desired_velocity * 0.1f).magnitude - position.magnitude);
-        reward += Mathf.Pow(progress, 2) * 0.01666f;
+        reward += Mathf.Pow(progress, 2) * 0.00166f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
-        AddReward(reward * 0.1f);
+        AddReward(reward);
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, avg_velocity, Color.green);
 
     }
 
-    public void Fall()
+    public void Fall(string name)
     {
+        if (rotation_pct > 0.88f)
+        {
+            Debug.Log($"Fall({name})");
+        }
         SetReward(-1);
         EndEpisode();
+        Destroy(body);
+        CreateBody();
+    }
+    public void Stop()
+    {
+        if (rotation_pct > 0.88f)
+        {
+            Debug.Log("Stop");
+        }
+        SetReward(-1);
+        EndEpisode();
+        for (int i = 14; i < 22 && i > 5; i += rightStep ? -1 : 1)
+        {
+            Vector3 sv = desired_acceleration + Physics.gravity;
+            body.transform.GetChild(i).GetComponent<Rigidbody>().velocity = new Vector3(sv.x, sv.y, sv.z);
+        }
+        rightStep = !rightStep;
     }
 
     public override void OnEpisodeBegin()
     {
-        Destroy(pendingBody);
-        pendingBody = null;
-        pendingVelocities = null;
-        pendingAngularVelocities = null;
-        saveStateTimer = 0;
-        Destroy(body);
-        CreateBody();
         focusPoint = blindFocus(head);
         graceTimer = gracePeriod;
+        saveStateTimer = 0;
     }
 
     public static Vector3 blindFocus(Transform head)
