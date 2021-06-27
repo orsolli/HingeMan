@@ -3,9 +3,9 @@ using Unity.MLAgents;
 
 public class FloorIsLava : MonoBehaviour
 {
-    public void OnCollisionEnter(Collision other)
+    public void OnCollisionStay(Collision other)
     {
-        if (!other.gameObject.name.Contains("Foot") && !other.gameObject.name.Contains("Leg"))
+        if (!other.gameObject.name.Contains("Foot"))
         {
             other.gameObject.GetComponentInParent<HumanAgent>().Fall(other.gameObject.name);
         }

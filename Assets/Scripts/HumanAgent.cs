@@ -173,7 +173,7 @@ public class HumanAgent : Agent
         }
         else
         {
-            SetReward(-1);
+            SetReward(-0.5f);
             focusPoint = blindFocus(head);
         }
 
@@ -230,22 +230,22 @@ public class HumanAgent : Agent
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
         desired_acceleration = desired_velocity - Physics.gravity;
 
-        float reward = 0.00166f;
-        float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) - Vector3.Cross(avg_velocity, desired_velocity).magnitude);
-
-        velLoss = Mathf.Clamp01(velLoss / Mathf.Max(desired_velocity.sqrMagnitude, 1f));
-        Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
-        reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
-        if (velLoss > 0.99f && avg_velocity.magnitude < 0.02f)
+        float reward = 0.00667f;
+        float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) * 10f - 0.1f * Vector3.Cross(avg_velocity, desired_velocity).magnitude);
+        velLoss /= Mathf.Max(desired_velocity.sqrMagnitude, 1f);
+        if (velLoss >= 1 && avg_velocity.magnitude < 0.02f)
         {
             Stop();
         }
+        velLoss = Mathf.Clamp01(velLoss);
+        Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
+        reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
 
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
         Vector3 position = (footL.position + footR.position) / 2;
-        float progress = 1 - Mathf.Clamp01((transform.position + desired_velocity * 0.1f).magnitude - position.magnitude);
-        reward += Mathf.Pow(progress, 2) * 0.00166f;
+        float progress = 1 - Mathf.Clamp01((transform.position + desired_velocity * 0.25f).magnitude - position.magnitude);
+        reward += Mathf.Pow(progress, 2) * 0.00667f;
         Monitor.Log("Position", progress, MonitorType.slider, head);
         reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         AddReward(reward);
@@ -256,10 +256,6 @@ public class HumanAgent : Agent
 
     public void Fall(string name)
     {
-        if (rotation_pct > 0.88f)
-        {
-            Debug.Log($"Fall({name})");
-        }
         SetReward(-1);
         EndEpisode();
         Destroy(body);
@@ -267,11 +263,7 @@ public class HumanAgent : Agent
     }
     public void Stop()
     {
-        if (rotation_pct > 0.88f)
-        {
-            Debug.Log("Stop");
-        }
-        SetReward(-1);
+        SetReward(-0.5f);
         EndEpisode();
         for (int i = 14; i < 22 && i > 5; i += rightStep ? -1 : 1)
         {
