@@ -36,6 +36,7 @@ public class HumanAgent : Agent
     Vector3 desired_acceleration = -Physics.gravity;
     public Vector3 avg_velocity;
     bool rightStep = true;
+    float effort = 0f;
     public override void Initialize()
     {
         initialPoseSize = startPoses.Count;
@@ -153,7 +154,8 @@ public class HumanAgent : Agent
         foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
         {
             float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            //AddReward(-Mathf.Clamp01(-0.1f + Mathf.Pow(springAction, 2) * 0.02f)); // full strength on all 21 gives ca -0.3f.  -0.1 + (strength 0.4 * / 21)
+            effort = -Mathf.Clamp01(Mathf.Pow(springAction, 2));
+            AddReward(effort * 0.00166f);
             float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
@@ -225,18 +227,14 @@ public class HumanAgent : Agent
         massCenter -= body.transform.position;
 
         Vector3 direction = transform.rotation * Vector3.forward;
-        Vector3 desired_velocity = direction * rotation_pct * maxSpeed;
+        Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
         desired_acceleration = desired_velocity - Physics.gravity;
 
-        float reward = 0.00667f;
+        float reward = 0.01f;
         float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) * 10f - 0.1f * Vector3.Cross(avg_velocity, desired_velocity).magnitude);
         velLoss /= Mathf.Max(desired_velocity.sqrMagnitude, 1f);
-        if (velLoss >= 1 && avg_velocity.magnitude < 0.02f)
-        {
-            Stop();
-        }
         velLoss = Mathf.Clamp01(velLoss);
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
         reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
@@ -244,10 +242,18 @@ public class HumanAgent : Agent
         Transform footR = body.transform.Find("RightFoot");
         Transform footL = body.transform.Find("LeftFoot");
         Vector3 position = (footL.position + footR.position) / 2;
-        float progress = 1 - Mathf.Clamp01((transform.position + desired_velocity * 0.25f).magnitude - position.magnitude);
-        reward += Mathf.Pow(progress, 2) * 0.00667f;
-        Monitor.Log("Position", progress, MonitorType.slider, head);
-        reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
+        if (rotation_pct > 0.001f)
+        {
+            float progress = 1 - Mathf.Clamp01(0.5f * ((transform.position + direction * 2.5f).magnitude - position.magnitude));
+            reward += Mathf.Pow(progress, 2) * 0.00667f;
+            Monitor.Log("Position", progress, MonitorType.slider, head);
+        }
+        else
+        {
+            reward += 0.00667f;
+        }
+        Monitor.Log("Effort", effort, MonitorType.slider, head);
+        reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
         AddReward(reward);
         Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
         Debug.DrawRay(head.position, avg_velocity, Color.green);
@@ -265,12 +271,6 @@ public class HumanAgent : Agent
     {
         SetReward(-0.5f);
         EndEpisode();
-        for (int i = 14; i < 22 && i > 5; i += rightStep ? -1 : 1)
-        {
-            Vector3 sv = desired_acceleration + Physics.gravity;
-            body.transform.GetChild(i).GetComponent<Rigidbody>().velocity = new Vector3(sv.x, sv.y, sv.z);
-        }
-        rightStep = !rightStep;
     }
 
     public override void OnEpisodeBegin()
