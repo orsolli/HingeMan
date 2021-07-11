@@ -135,8 +135,9 @@ public class MirrorAgent : Agent
         difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftFoot], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightFoot], -1, 1));
         difference /= 21;
         difference /= 2;
-        SetReward(-Mathf.Pow(difference, 2));
-        Monitor.Log("Mirror", -difference, MonitorType.slider, agent.body.transform.GetChild((int)BodyPart.Head));
+        float rew = 0.18f - Mathf.Pow(difference, 2);
+        SetReward(rew * 0.1f);
+        Monitor.Log("Mirror", rew, MonitorType.slider, agent.body.transform.GetChild((int)BodyPart.Head));
     }
 
 }

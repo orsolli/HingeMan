@@ -62,11 +62,6 @@ public class HumanAgent : Agent
     {
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
-        for (int i = 14; i < 22 && i > 5; i += rightStep ? -1 : 1)
-        {
-            Vector3 sv = desired_acceleration + Physics.gravity;
-            body.transform.GetChild(i).GetComponent<Rigidbody>().velocity = new Vector3(sv.x, sv.y, sv.z);
-        }
         rightStep = !rightStep;
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
@@ -227,15 +222,18 @@ public class HumanAgent : Agent
         massCenter -= body.transform.position;
 
         Vector3 direction = transform.rotation * Vector3.forward;
+        Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
+        direction = (desired_position - body.transform.position).normalized;
+        Debug.DrawRay(head.position, direction, Color.green);
+
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
-        desired_acceleration = desired_velocity - Physics.gravity;
+        desired_acceleration = corrected_direction - Physics.gravity;
 
         float reward = 0.006f;
-        float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) * 10f - 0.1f * Vector3.Cross(avg_velocity, desired_velocity).magnitude);
-        velLoss += Mathf.Pow(desired_velocity.sqrMagnitude - avg_velocity.sqrMagnitude, 2);
-        velLoss /= Mathf.Max(desired_velocity.sqrMagnitude, 1f);
+        float velLoss = corrected_direction.sqrMagnitude - (Vector3.Dot(avg_velocity, corrected_direction) * 10f - 0.1f * Vector3.Cross(avg_velocity, corrected_direction).magnitude);
+        velLoss /= Mathf.Max(corrected_direction.sqrMagnitude, 1f);
         velLoss = Mathf.Clamp01(velLoss);
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
         reward -= Mathf.Pow(velLoss, 2) * 0.00734f;
@@ -248,7 +246,7 @@ public class HumanAgent : Agent
             if (velLoss < 0.999f)
             {
                 float progress = 1 - Mathf.Clamp01(0.5f * ((transform.position + direction * 2.5f).magnitude - position.magnitude));
-                reward += Mathf.Pow(progress, 2) * 0.00667f;
+                reward += 0.000734f + Mathf.Pow(progress, 2) * 0.0006f;
                 Monitor.Log("Position", progress, MonitorType.slider, head);
             }
         }
