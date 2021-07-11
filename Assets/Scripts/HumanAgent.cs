@@ -6,7 +6,7 @@ using Unity.MLAgents.Policies;
 
 public class HumanAgent : Agent
 {
-    GameObject body;
+    public GameObject body;
     public float maxSpeed = 10f;
     public float saveStateInterval = 1f;
     float saveStateTimer = 0;
@@ -20,20 +20,20 @@ public class HumanAgent : Agent
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
-    private static int frames = 30;
+    public static int frames = 30;
     private Dictionary<string, Vector3> velocity;
     private Dictionary<string, Vector3> angular_velocity;
-    private Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
-    private Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
+    public Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
+    public Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
     public float gracePeriod = 1f;
     public float graceTimer;
     Queue<float> pendingRewards = new Queue<float>();
 
     // Eyes
-    Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
-    Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
-    Vector3 focusPoint = Vector3.forward;
-    Vector3 desired_acceleration = -Physics.gravity;
+    public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
+    public Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
+    public Vector3 focusPoint = Vector3.forward;
+    public Vector3 desired_acceleration = -Physics.gravity;
     public Vector3 avg_velocity;
     bool rightStep = true;
     float effort = 0f;
@@ -234,6 +234,7 @@ public class HumanAgent : Agent
 
         float reward = 0.006f;
         float velLoss = desired_velocity.sqrMagnitude - (Vector3.Dot(avg_velocity, desired_velocity) * 10f - 0.1f * Vector3.Cross(avg_velocity, desired_velocity).magnitude);
+        velLoss += Mathf.Pow(desired_velocity.sqrMagnitude - avg_velocity.sqrMagnitude, 2);
         velLoss /= Mathf.Max(desired_velocity.sqrMagnitude, 1f);
         velLoss = Mathf.Clamp01(velLoss);
         Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
