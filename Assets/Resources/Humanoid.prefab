@@ -51,6 +51,7 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 4096
   body: {fileID: 0}
+  maxSpeed: 10
   saveStateInterval: 2
   startPoses:
   - {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
@@ -88,7 +89,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 38
+    VectorObservationSize: 59
     NumStackedVectorObservations: 1
     VectorActionSize: 2a000000
     VectorActionDescriptions: []

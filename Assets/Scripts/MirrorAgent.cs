@@ -31,47 +31,40 @@ public class MirrorAgent : Agent
         LeftFoot
     }
 
-    private float normalObs(Transform bodyPart)
+    private void observe(VectorSensor sensor, Transform bodyPart, bool negative = false)
     {
+        int factor = negative ? -1 : 1;
         HingeJoint limb = bodyPart.GetComponent<HingeJoint>();
         float range = limb.limits.max - limb.limits.min;
-        return 2 * (limb.angle - limb.limits.min) / range - 1;
-    }
-    private float negativeObs(Transform bodyPart)
-    {
-        HingeJoint limb = bodyPart.GetComponent<HingeJoint>();
-        float range = limb.limits.max - limb.limits.min;
-        return -(2 * (limb.angle - limb.limits.min) / range - 1);
+        sensor.AddObservation(factor * 2 * (limb.angle - limb.limits.min) / range - 1);
+        sensor.AddObservation(Mathf.Clamp(factor * limb.velocity / 2000f, -1, 1));
     }
     public override void CollectObservations(VectorSensor sensor)
     {
         Transform body = agent.body.transform;
         Transform head = body.GetChild(((int)BodyPart.Head));
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
-        sensor.AddObservation(normalObs(head));
-        sensor.AddObservation(negativeObs(body.GetChild((int)BodyPart.NeckNo)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.NeckYes)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.Spine)));
-        sensor.AddObservation(negativeObs(body.GetChild((int)BodyPart.Tale)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightSholder)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightBicep)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightArm)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightElbow)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftPelvis)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftThigh)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftLeg)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftFoot)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftSholder)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftBicep)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftArm)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.LeftElbow)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightPelvis)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightThigh)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightLeg)));
-        sensor.AddObservation(normalObs(body.GetChild((int)BodyPart.RightFoot)));
-        foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
-        {
-        }
+        observe(sensor, head);
+        observe(sensor, body.GetChild((int)BodyPart.NeckNo), true);
+        observe(sensor, body.GetChild((int)BodyPart.NeckYes));
+        observe(sensor, body.GetChild((int)BodyPart.Spine));
+        observe(sensor, body.GetChild((int)BodyPart.Tale), true);
+        observe(sensor, body.GetChild((int)BodyPart.RightSholder));
+        observe(sensor, body.GetChild((int)BodyPart.RightBicep));
+        observe(sensor, body.GetChild((int)BodyPart.RightArm));
+        observe(sensor, body.GetChild((int)BodyPart.RightElbow));
+        observe(sensor, body.GetChild((int)BodyPart.LeftPelvis));
+        observe(sensor, body.GetChild((int)BodyPart.LeftThigh));
+        observe(sensor, body.GetChild((int)BodyPart.LeftLeg));
+        observe(sensor, body.GetChild((int)BodyPart.LeftFoot));
+        observe(sensor, body.GetChild((int)BodyPart.LeftSholder));
+        observe(sensor, body.GetChild((int)BodyPart.LeftBicep));
+        observe(sensor, body.GetChild((int)BodyPart.LeftArm));
+        observe(sensor, body.GetChild((int)BodyPart.LeftElbow));
+        observe(sensor, body.GetChild((int)BodyPart.RightPelvis));
+        observe(sensor, body.GetChild((int)BodyPart.RightThigh));
+        observe(sensor, body.GetChild((int)BodyPart.RightLeg));
+        observe(sensor, body.GetChild((int)BodyPart.RightFoot));
 
         Vector3 N = head_rotation * Vector3.left;
         Matrix4x4 ReflectByX = new Matrix4x4(

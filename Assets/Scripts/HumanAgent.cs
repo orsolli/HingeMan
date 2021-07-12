@@ -20,7 +20,7 @@ public class HumanAgent : Agent
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
-    public static int frames = 30;
+    public static int frames = 15;
     private Dictionary<string, Vector3> velocity;
     private Dictionary<string, Vector3> angular_velocity;
     public Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
@@ -114,6 +114,7 @@ public class HumanAgent : Agent
             float range = limb.limits.max - limb.limits.min;
             JointSpring spring = limb.spring;
             sensor.AddObservation(2 * (limb.angle - limb.limits.min) / range - 1);
+            sensor.AddObservation(Mathf.Clamp(limb.velocity / 2000f, -1, 1));
         }
         Vector3 relative_acc = head_rotation * desired_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(relative_acc / 100f, 1f));
