@@ -231,29 +231,22 @@ public class HumanAgent : Agent
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
         desired_acceleration = corrected_direction - Physics.gravity;
 
-        float reward = 0.006f;
-        float velLoss = corrected_direction.sqrMagnitude - (Vector3.Dot(avg_velocity, corrected_direction) * 10f - 0.1f * Vector3.Cross(avg_velocity, corrected_direction).magnitude);
-        velLoss /= Mathf.Max(corrected_direction.sqrMagnitude, 1f);
-        velLoss = Mathf.Clamp01(velLoss);
-        Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
-        reward -= Mathf.Pow(velLoss, 2) * 0.00734f;
-
-        Transform footR = body.transform.Find("RightFoot");
-        Transform footL = body.transform.Find("LeftFoot");
-        Vector3 position = (footL.position + footR.position) / 2;
-        if (rotation_pct > 0.001f)
+        float reward = 0.00667f;
+        if (corrected_direction.sqrMagnitude > 0.01f)
         {
-            if (velLoss < 0.999f)
+            float velLoss = corrected_direction.sqrMagnitude - (Vector3.Dot(avg_velocity, corrected_direction) - Vector3.Cross(avg_velocity, corrected_direction).magnitude);
+            velLoss /= corrected_direction.sqrMagnitude;
+            velLoss = Mathf.Clamp01(velLoss);
+            Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
+            reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
+
+            if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.01
+            || body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.01)
             {
-                float progress = 1 - Mathf.Clamp01(0.5f * ((transform.position + direction * 2.5f).magnitude - position.magnitude));
-                reward += 0.000734f + Mathf.Pow(progress, 2) * 0.0006f;
-                Monitor.Log("Position", progress, MonitorType.slider, head);
+                reward -= 0.00067f;
             }
         }
-        else
-        {
-            reward += 0.00667f;
-        }
+
         Monitor.Log("Effort", effort, MonitorType.slider, head);
         reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
         AddReward(reward);
