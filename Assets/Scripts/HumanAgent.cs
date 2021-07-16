@@ -8,11 +8,6 @@ public class HumanAgent : Agent
 {
     public GameObject body;
     public float maxSpeed = 10f;
-    public float saveStateInterval = 1f;
-    float saveStateTimer = 0;
-    GameObject pendingBody;
-    Dictionary<string, Vector3> pendingVelocities;
-    Dictionary<string, Vector3> pendingAngularVelocities;
     int initialPoseSize;
     public List<GameObject> startPoses = new List<GameObject>();
     public List<Dictionary<string, Vector3>> startVelocities = new List<Dictionary<string, Vector3>>();
@@ -25,9 +20,6 @@ public class HumanAgent : Agent
     private Dictionary<string, Vector3> angular_velocity;
     public Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
     public Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
-    public float gracePeriod = 1f;
-    public float graceTimer;
-    Queue<float> pendingRewards = new Queue<float>();
 
     // Eyes
     public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
@@ -35,8 +27,31 @@ public class HumanAgent : Agent
     public Vector3 focusPoint = Vector3.forward;
     public Vector3 desired_acceleration = -Physics.gravity;
     public Vector3 avg_velocity;
-    bool rightStep = true;
     float effort = 0f;
+    enum Hinges
+    {
+        Head,
+        NeckNo,
+        NeckYes,
+        Spine,
+        Tale,
+        LeftSholder,
+        LeftBicep,
+        LeftArm,
+        LeftElbow,
+        RightPelvis,
+        RightThigh,
+        RightLeg,
+        RightFoot,
+        RightSholder,
+        RightBicep,
+        RightArm,
+        RightElbow,
+        LeftPelvis,
+        LeftThigh,
+        LeftLeg,
+        LeftFoot
+    }
     public override void Initialize()
     {
         initialPoseSize = startPoses.Count;
@@ -62,7 +77,6 @@ public class HumanAgent : Agent
     {
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
-        rightStep = !rightStep;
         body.SetActive(true);
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
@@ -106,16 +120,38 @@ public class HumanAgent : Agent
         return dict;
     }
 
+    private void observe(VectorSensor sensor, HingeJoint limb)
+    {
+        float range = limb.limits.max - limb.limits.min;
+        sensor.AddObservation(2 * (limb.angle - limb.limits.min) / range - 1);
+        sensor.AddObservation(Mathf.Clamp(limb.velocity / 2000f, -1, 1));
+    }
     public override void CollectObservations(VectorSensor sensor)
     {
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
-        foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
-        {
-            float range = limb.limits.max - limb.limits.min;
-            JointSpring spring = limb.spring;
-            sensor.AddObservation(2 * (limb.angle - limb.limits.min) / range - 1);
-            sensor.AddObservation(Mathf.Clamp(limb.velocity / 2000f, -1, 1));
-        }
+        var hinges = body.GetComponentsInChildren<HingeJoint>();
+        observe(sensor, hinges[(int)Hinges.Head]);
+        observe(sensor, hinges[(int)Hinges.NeckNo]);
+        observe(sensor, hinges[(int)Hinges.NeckYes]);
+        observe(sensor, hinges[(int)Hinges.Spine]);
+        observe(sensor, hinges[(int)Hinges.Tale]);
+        observe(sensor, hinges[(int)Hinges.LeftSholder]);
+        observe(sensor, hinges[(int)Hinges.LeftBicep]);
+        observe(sensor, hinges[(int)Hinges.LeftArm]);
+        observe(sensor, hinges[(int)Hinges.LeftElbow]);
+        observe(sensor, hinges[(int)Hinges.RightPelvis]);
+        observe(sensor, hinges[(int)Hinges.RightThigh]);
+        observe(sensor, hinges[(int)Hinges.RightLeg]);
+        observe(sensor, hinges[(int)Hinges.RightFoot]);
+        observe(sensor, hinges[(int)Hinges.RightSholder]);
+        observe(sensor, hinges[(int)Hinges.RightBicep]);
+        observe(sensor, hinges[(int)Hinges.RightArm]);
+        observe(sensor, hinges[(int)Hinges.RightElbow]);
+        observe(sensor, hinges[(int)Hinges.LeftPelvis]);
+        observe(sensor, hinges[(int)Hinges.LeftThigh]);
+        observe(sensor, hinges[(int)Hinges.LeftLeg]);
+        observe(sensor, hinges[(int)Hinges.LeftFoot]);
+
         Vector3 relative_acc = head_rotation * desired_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(relative_acc / 100f, 1f));
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
@@ -144,21 +180,42 @@ public class HumanAgent : Agent
         sensor.AddObservation(lookAtLeft);
     }
 
-    public override void OnActionReceived(float[] act)
+    private void act(float force, float angle, HingeJoint limb)
     {
-        int action = 0;
-        foreach (HingeJoint limb in body.GetComponentsInChildren<HingeJoint>())
-        {
-            float springAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            effort = -Mathf.Clamp01(Mathf.Pow(springAction, 2));
-            AddReward(effort * 0.00166f);
-            float targetAction = (Mathf.Clamp(act[action++], -1f, 1f) + 1f) / 2;
-            float range = limb.limits.max - limb.limits.min;
-            JointSpring spring = limb.spring;
-            spring.spring = springAction * 150;
-            spring.targetPosition = targetAction * range + limb.limits.min;
-            limb.spring = spring;
-        }
+        float springAction = (Mathf.Clamp(force, -1f, 1f) + 1f) / 2;
+        effort = -Mathf.Clamp01(Mathf.Pow(springAction, 2));
+        AddReward(effort * 0.00166f);
+        float targetAction = (Mathf.Clamp(angle, -1f, 1f) + 1f) / 2;
+        float range = limb.limits.max - limb.limits.min;
+        JointSpring spring = limb.spring;
+        spring.spring = springAction * 150;
+        spring.targetPosition = targetAction * range + limb.limits.min;
+        limb.spring = spring;
+    }
+    public override void OnActionReceived(float[] actions)
+    {
+        HingeJoint[] limb = body.GetComponentsInChildren<HingeJoint>();
+        act(actions[(int)Hinges.Head * 2], actions[(int)Hinges.Head * 2 + 1], limb[(int)Hinges.Head]);
+        act(actions[(int)Hinges.NeckNo * 2], actions[(int)Hinges.NeckNo * 2 + 1], limb[(int)Hinges.NeckNo]);
+        act(actions[(int)Hinges.NeckYes * 2], actions[(int)Hinges.NeckYes * 2 + 1], limb[(int)Hinges.NeckYes]);
+        act(actions[(int)Hinges.Spine * 2], actions[(int)Hinges.Spine * 2 + 1], limb[(int)Hinges.Spine]);
+        act(actions[(int)Hinges.Tale * 2], actions[(int)Hinges.Tale * 2 + 1], limb[(int)Hinges.Tale]);
+        act(actions[(int)Hinges.LeftSholder * 2], actions[(int)Hinges.LeftSholder * 2 + 1], limb[(int)Hinges.LeftSholder]);
+        act(actions[(int)Hinges.LeftBicep * 2], actions[(int)Hinges.LeftBicep * 2 + 1], limb[(int)Hinges.LeftBicep]);
+        act(actions[(int)Hinges.LeftArm * 2], actions[(int)Hinges.LeftArm * 2 + 1], limb[(int)Hinges.LeftArm]);
+        act(actions[(int)Hinges.LeftElbow * 2], actions[(int)Hinges.LeftElbow * 2 + 1], limb[(int)Hinges.LeftElbow]);
+        act(actions[(int)Hinges.RightPelvis * 2], actions[(int)Hinges.RightPelvis * 2 + 1], limb[(int)Hinges.RightPelvis]);
+        act(actions[(int)Hinges.RightThigh * 2], actions[(int)Hinges.RightThigh * 2 + 1], limb[(int)Hinges.RightThigh]);
+        act(actions[(int)Hinges.RightLeg * 2], actions[(int)Hinges.RightLeg * 2 + 1], limb[(int)Hinges.RightLeg]);
+        act(actions[(int)Hinges.RightFoot * 2], actions[(int)Hinges.RightFoot * 2 + 1], limb[(int)Hinges.RightFoot]);
+        act(actions[(int)Hinges.RightSholder * 2], actions[(int)Hinges.RightSholder * 2 + 1], limb[(int)Hinges.RightSholder]);
+        act(actions[(int)Hinges.RightBicep * 2], actions[(int)Hinges.RightBicep * 2 + 1], limb[(int)Hinges.RightBicep]);
+        act(actions[(int)Hinges.RightArm * 2], actions[(int)Hinges.RightArm * 2 + 1], limb[(int)Hinges.RightArm]);
+        act(actions[(int)Hinges.RightElbow * 2], actions[(int)Hinges.RightElbow * 2 + 1], limb[(int)Hinges.RightElbow]);
+        act(actions[(int)Hinges.LeftPelvis * 2], actions[(int)Hinges.LeftPelvis * 2 + 1], limb[(int)Hinges.LeftPelvis]);
+        act(actions[(int)Hinges.LeftThigh * 2], actions[(int)Hinges.LeftThigh * 2 + 1], limb[(int)Hinges.LeftThigh]);
+        act(actions[(int)Hinges.LeftLeg * 2], actions[(int)Hinges.LeftLeg * 2 + 1], limb[(int)Hinges.LeftLeg]);
+        act(actions[(int)Hinges.LeftFoot * 2], actions[(int)Hinges.LeftFoot * 2 + 1], limb[(int)Hinges.LeftFoot]);
 
         // Find focusPoint
         Vector3 lookAt = head.rotation * Vector3.forward;
@@ -174,16 +231,6 @@ public class HumanAgent : Agent
             SetReward(-0.5f);
             focusPoint = blindFocus(head);
         }
-
-        // If in bad state, end episode before next action
-        if (graceTimer < gracePeriod)
-        {
-            if (graceTimer > 0.105f)
-            {
-                graceTimer = 0.1f;
-            }
-        }
-
     }
 
     float deltaTimeCumulative = 0;
@@ -196,7 +243,6 @@ public class HumanAgent : Agent
         }
         float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
         deltaTimeCumulative = 0;
-        saveStateTimer += deltaTime;
         Vector3 massCenter = Vector3.zero;
         float mass = 0f;
         avg_velocity = Vector3.zero;
@@ -215,12 +261,9 @@ public class HumanAgent : Agent
             len++;
             avg_velocity += part.velocity * part.mass;
 
-            massCenter += part.worldCenterOfMass * part.mass;
             mass += part.mass;
         }
         avg_velocity /= len * mass;
-        massCenter /= mass;
-        massCenter -= body.transform.position;
 
         Vector3 direction = transform.rotation * Vector3.forward;
         Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
@@ -241,10 +284,14 @@ public class HumanAgent : Agent
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
 
-            if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.01
-            || body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.01)
+            if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
+            && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
             {
                 reward -= 0.00067f;
+                if (StepCount > 75 && head.localPosition.magnitude < 2)
+                {
+                    Fall();
+                }
             }
         }
 
@@ -256,24 +303,17 @@ public class HumanAgent : Agent
 
     }
 
-    public void Fall(string name)
+    public void Fall()
     {
         SetReward(-1);
         EndEpisode();
         Destroy(body);
         CreateBody();
     }
-    public void Stop()
-    {
-        SetReward(-0.5f);
-        EndEpisode();
-    }
 
     public override void OnEpisodeBegin()
     {
         focusPoint = blindFocus(head);
-        graceTimer = gracePeriod;
-        saveStateTimer = 0;
     }
 
     public static Vector3 blindFocus(Transform head)

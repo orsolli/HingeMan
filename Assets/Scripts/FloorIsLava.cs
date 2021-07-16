@@ -7,7 +7,7 @@ public class FloorIsLava : MonoBehaviour
     {
         if (!other.gameObject.name.Contains("Foot"))
         {
-            other.gameObject.GetComponentInParent<HumanAgent>().Fall(other.gameObject.name);
+            other.gameObject.GetComponentInParent<HumanAgent>().Fall();
         }
     }
 }
