@@ -283,16 +283,17 @@ public class HumanAgent : Agent
             velLoss = Mathf.Clamp01(velLoss);
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
-
-            if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
-            && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
+            Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime - transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 20;
+            Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan);
+            if (head.position.magnitude < desired_progress.magnitude)
             {
-                reward -= 0.00067f;
-                if (StepCount > 75 && head.localPosition.magnitude < 2)
-                {
-                    Fall();
-                }
+                Fall();
             }
+        }
+        else
+        {
+            reward -= avg_velocity.sqrMagnitude * 0.00667f;
+            Monitor.Log("Velocity", -avg_velocity.sqrMagnitude, MonitorType.slider, head);
         }
 
         Monitor.Log("Effort", effort, MonitorType.slider, head);
