@@ -276,24 +276,29 @@ public class HumanAgent : Agent
         desired_acceleration = corrected_direction - Physics.gravity;
 
         float reward = 0.00667f;
-        if (corrected_direction.sqrMagnitude > 0.01f)
+        if (rotation_pct < 0.001f)
+        {
+            reward -= avg_velocity.magnitude * 0.667f;
+            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, head);
+        }
+        else if (corrected_direction.sqrMagnitude > 0.001f)
         {
             float velLoss = corrected_direction.sqrMagnitude - (Vector3.Dot(avg_velocity, corrected_direction) - Vector3.Cross(avg_velocity, corrected_direction).magnitude);
             velLoss /= corrected_direction.sqrMagnitude;
             velLoss = Mathf.Clamp01(velLoss);
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
-            Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime - transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 20;
-            Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan);
-            if (head.position.magnitude < desired_progress.magnitude)
+            Vector3 headStart = transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 50;
+            Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
+            if (desired_progress.magnitude > headStart.magnitude)
             {
-                Fall();
+                desired_progress = desired_progress - headStart;
+                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan);
+                if (head.position.magnitude < desired_progress.magnitude)
+                {
+                    Fall();
+                }
             }
-        }
-        else
-        {
-            reward -= avg_velocity.sqrMagnitude * 0.00667f;
-            Monitor.Log("Velocity", -avg_velocity.sqrMagnitude, MonitorType.slider, head);
         }
 
         Monitor.Log("Effort", effort, MonitorType.slider, head);
