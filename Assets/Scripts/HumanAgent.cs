@@ -298,6 +298,14 @@ public class HumanAgent : Agent
                 {
                     Fall();
                 }
+            } else if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
+                    && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
+            {
+                reward -= 0.00067f;
+                if (StepCount > 75 && head.localPosition.magnitude < 1.6)
+                {
+                    Fall();
+                }
             }
         }
 
