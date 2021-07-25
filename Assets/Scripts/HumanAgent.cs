@@ -275,7 +275,8 @@ public class HumanAgent : Agent
         float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
         desired_acceleration = corrected_direction - Physics.gravity;
 
-        float reward = 0.00667f;
+        Monitor.RemoveAllValues(head);
+        float reward = 0.007f;
         if (rotation_pct < 0.001f)
         {
             reward -= avg_velocity.magnitude * 0.667f;
@@ -283,8 +284,7 @@ public class HumanAgent : Agent
         }
         else if (corrected_direction.sqrMagnitude > 0.001f)
         {
-            float velLoss = corrected_direction.sqrMagnitude - (Vector3.Dot(avg_velocity, corrected_direction) - Vector3.Cross(avg_velocity, corrected_direction).magnitude);
-            velLoss /= corrected_direction.sqrMagnitude;
+            float velLoss = 1 - (Vector3.Dot(avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
             velLoss = Mathf.Clamp01(velLoss);
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
@@ -297,9 +297,12 @@ public class HumanAgent : Agent
                 if (head.position.magnitude < desired_progress.magnitude)
                 {
                     Fall();
+                    return;
                 }
-            } else if (body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
-                    && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
+            }
+            if (head.localPosition.magnitude < 1.6
+             && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
+             && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
             {
                 reward -= 0.00067f;
                 if (StepCount > 75 && head.localPosition.magnitude < 1.6)
@@ -312,9 +315,9 @@ public class HumanAgent : Agent
         Monitor.Log("Effort", effort, MonitorType.slider, head);
         reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
         AddReward(reward);
-        Monitor.Log(GetComponent<BehaviorParameters>().BehaviorName, reward * 15, MonitorType.slider, head);
+        reward *= 15;
+        Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
         Debug.DrawRay(head.position, avg_velocity, Color.green);
-
     }
 
     public void Fall()
