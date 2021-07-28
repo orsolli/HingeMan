@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
@@ -78,6 +78,10 @@ public class HumanAgent : Agent
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
         body.SetActive(true);
+        foreach (var b in body.GetComponentsInChildren<Rigidbody>())
+        {
+            b.ResetInertiaTensor();
+        }
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
@@ -300,12 +304,13 @@ public class HumanAgent : Agent
                     return;
                 }
             }
-            if (head.localPosition.magnitude < 1.6
+            float progress = new Vector2(head.localPosition.x, head.localPosition.z).magnitude;
+            if (progress < 0.6
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
             {
                 reward -= 0.00067f;
-                if (StepCount > 75 && head.localPosition.magnitude < 1.6)
+                if (StepCount > 75 && progress < 0.6)
                 {
                     Fall();
                 }

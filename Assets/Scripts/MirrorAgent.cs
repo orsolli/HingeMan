@@ -130,7 +130,14 @@ public class MirrorAgent : Agent
         difference /= 2;
         float rew = 0.18f - Mathf.Pow(difference, 2);
         SetReward(rew * 0.01f);
-        Monitor.Log("Mirror", rew, MonitorType.slider, agent.body.transform.GetChild((int)BodyPart.Head));
+        Monitor.Log("Mirror", rew, MonitorType.slider, agent.transform);
     }
 
+    void FixedUpdate()
+    {
+        if (agent.StepCount < this.StepCount)
+        {
+            EndEpisode();
+        }
+    }
 }
