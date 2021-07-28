@@ -46,9 +46,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 98
+    VectorObservationSize: 104
     NumStackedVectorObservations: 1
-    VectorActionSize: 4d000000
+    VectorActionSize: 3e000000
     VectorActionDescriptions: []
     VectorActionSpaceType: 1
   m_Model: {fileID: 5022602860645237092, guid: 476d373b8df6d1e8580569197e140882, type: 3}
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 59
+    VectorObservationSize: 65
     NumStackedVectorObservations: 1
     VectorActionSize: 2a000000
     VectorActionDescriptions: []
@@ -263,14 +263,6 @@ PrefabInstance:
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4371988732278397252, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_ConnectedAnchor.z
-      value: -0.000015273694
-      objectReference: {fileID: 0}
-    - target: {fileID: 4372864524757519798, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
-      propertyPath: m_ConnectedAnchor.z
-      value: -0.000011548403
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a67bd14dff991420db9c74a841c4536b, type: 3}

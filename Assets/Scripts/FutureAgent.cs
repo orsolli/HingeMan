@@ -162,6 +162,12 @@ public class FutureAgent : Agent
         Quaternion lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, head.rotation * Vector3.up);
         addObs(lookAtLeft);
     }
+    private void observeFoot(Action<object> addObs, Transform foot)
+    {
+        Quaternion foot_rotation = Quaternion.Inverse(foot.rotation).normalized;
+        FootSensor footSensor = foot.GetComponent<FootSensor>();
+        addObs(Vector3.ClampMagnitude(foot_rotation * footSensor.impulse / 20f, 1f));
+    }
     public override void CollectObservations(VectorSensor sensor)
     {
         CollectAllObservations(AddObservations(sensor));
@@ -221,6 +227,8 @@ public class FutureAgent : Agent
 
         observeVelocities(addObs, head, head_rotation);
         observeEyes(addObs, head, head_rotation);
+        observeFoot(addObs, body.GetChild((int)BodyPart.RightFoot));
+        observeFoot(addObs, body.GetChild((int)BodyPart.LeftFoot));
     }
 
     public override void OnActionReceived(float[] act)
