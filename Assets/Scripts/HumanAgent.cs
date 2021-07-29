@@ -15,7 +15,7 @@ public class HumanAgent : Agent
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
-    public static int frames = 15;
+    public static int frames = 1;
     private Dictionary<string, Vector3> velocity;
     private Dictionary<string, Vector3> angular_velocity;
     public Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
