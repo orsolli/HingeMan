@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Model: {fileID: 5022602860645237092, guid: 476d373b8df6d1e8580569197e140882, type: 3}
   m_InferenceDevice: 1
   m_BehaviorType: 0
-  m_BehaviorName: FutureState
+  m_BehaviorName: Future
   TeamId: 0
   m_UseChildSensors: 1
 --- !u!114 &6487188296358855787
