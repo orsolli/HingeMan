@@ -5,7 +5,7 @@ MonoImporter:
   serializedVersion: 2
   defaultReferences:
   - bodyPrefab: {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-  executionOrder: 0
+  executionOrder: 200
   icon: {instanceID: 0}
   userData: 
   assetBundleName: 

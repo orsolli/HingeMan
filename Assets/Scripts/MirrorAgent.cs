@@ -76,19 +76,10 @@ public class MirrorAgent : Agent
         Vector3 relative_acc = ReflectByX * (head_rotation * agent.desired_acceleration);
         sensor.AddObservation(Vector3.ClampMagnitude(relative_acc / 100f, 1f));
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
-        Vector3 avg_acc = Vector3.zero;
-        Vector3 avg_angular_acc = Vector3.zero;
-        for (int i = 0; i < HumanAgent.frames; i++)
-        {
-            avg_acc += agent.acceleration[i][head.gameObject.name] / HumanAgent.frames;
-            avg_angular_acc += agent.angular_acceleration[i][head.gameObject.name] / HumanAgent.frames;
-        }
-        avg_acc /= HumanAgent.frames;
-        avg_angular_acc /= HumanAgent.frames;
-        Vector3 total_acceleration = avg_acc - Physics.gravity;
+        Vector3 total_acceleration = agent.avg_acceleration.acceleration - Physics.gravity;
         total_acceleration = ReflectByX * (head_rotation * total_acceleration);
         sensor.AddObservation(Vector3.ClampMagnitude(total_acceleration / 100f, 1f));
-        Vector3 total_angular_acceleration = ReflectByX * (head_rotation * avg_angular_acc);
+        Vector3 total_angular_acceleration = ReflectByX * (head_rotation * agent.avg_acceleration.angular_acceleration);
         sensor.AddObservation(Vector3.ClampMagnitude(total_angular_acceleration / 100f, 1f));
 
         Vector3 focusPoint = Quaternion.Inverse(head_rotation) * (ReflectByX * (head_rotation * agent.focusPoint));

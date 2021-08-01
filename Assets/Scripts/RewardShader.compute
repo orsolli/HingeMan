@@ -1,0 +1,56 @@
+
+struct Limb {
+    float3 Velocity;
+    float3 Angular_velocity;
+    uint Mass;
+};
+struct Accelerations {
+    float3 Acceleration;
+    float3 Angular_Acceleration;
+};
+
+#pragma kernel HumanReward
+
+float deltatime;
+RWStructuredBuffer<Limb> velocities;
+RWStructuredBuffer<Limb> previous_velocities;
+RWStructuredBuffer<float3> avg_velocities;
+RWStructuredBuffer<Accelerations> avg_accelerations;
+groupshared Limb avg_velocity[22];
+groupshared Accelerations avg_acceleration[22];
+
+[numthreads(1,22,1)]
+void HumanReward (uint3 id : SV_DispatchThreadID)
+{
+    float flatIndex = id.x * 22 + id.y;
+
+    avg_velocity[id.y].Velocity = velocities[flatIndex].Velocity * velocities[flatIndex].Mass / 22;
+    avg_velocity[id.y].Angular_velocity = velocities[flatIndex].Angular_velocity * velocities[flatIndex].Mass / 22;
+    avg_velocity[id.y].Mass = velocities[flatIndex].Mass;
+
+    avg_acceleration[id.y].Acceleration = (velocities[flatIndex].Velocity - previous_velocities[flatIndex].Velocity) * velocities[flatIndex].Mass / deltatime;
+    avg_acceleration[id.y].Angular_Acceleration = (velocities[flatIndex].Angular_velocity - previous_velocities[flatIndex].Angular_velocity) * velocities[flatIndex].Mass / deltatime;
+
+    GroupMemoryBarrierWithGroupSync();
+
+    // do reduction in shared mem
+    for(unsigned int s=11; s > 0; s >>= 1) {
+        if (id.y < s) {
+            avg_velocity[id.y].Velocity += avg_velocity[id.y + s].Velocity;
+            avg_velocity[id.y].Angular_velocity += avg_velocity[id.y + s].Angular_velocity;
+            avg_velocity[id.y].Mass += avg_velocity[id.y + s].Mass;
+
+            avg_acceleration[id.y].Acceleration += avg_acceleration[id.y + s].Acceleration;
+            avg_acceleration[id.y].Angular_Acceleration += avg_acceleration[id.y + s].Angular_Acceleration;
+        }
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    // write result for this block to global mem
+    if (id.y == 0) {
+        avg_velocities[id.x] = avg_velocity[0].Velocity / avg_velocity[0].Mass;
+        avg_accelerations[id.x].Acceleration = avg_acceleration[0].Acceleration / avg_velocity[0].Mass;
+        avg_accelerations[id.x].Angular_Acceleration = avg_acceleration[0].Angular_Acceleration / avg_velocity[0].Mass;
+    }
+    previous_velocities[flatIndex] = velocities[flatIndex];
+}

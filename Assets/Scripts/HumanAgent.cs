@@ -15,18 +15,19 @@ public class HumanAgent : Agent
     int poseIndex = 0;
     float rotation_pct = 0;
     Transform head;
-    public static int frames = 1;
-    private Dictionary<string, Vector3> velocity;
-    private Dictionary<string, Vector3> angular_velocity;
-    public Dictionary<string, Vector3>[] acceleration = new Dictionary<string, Vector3>[frames];
-    public Dictionary<string, Vector3>[] angular_acceleration = new Dictionary<string, Vector3>[frames];
-
     // Eyes
     public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
     public Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
     public Vector3 focusPoint = Vector3.forward;
     public Vector3 desired_acceleration = -Physics.gravity;
     public Vector3 avg_velocity;
+
+    public struct Acceleration
+    {
+        public Vector3 acceleration;
+        public Vector3 angular_acceleration;
+    };
+    public Acceleration avg_acceleration;
     float effort = 0f;
     enum Hinges
     {
@@ -85,15 +86,6 @@ public class HumanAgent : Agent
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
-
-        velocity = getVelocities(body);
-        angular_velocity = getAngularVelocities(body);
-        for (int i = 0; i < frames; i++)
-        {
-            acceleration[i] = getZeros(body);
-            angular_acceleration[i] = getZeros(body);
-        }
-
     }
 
     private static Dictionary<string, Vector3> getZeros(GameObject body)
@@ -102,24 +94,6 @@ public class HumanAgent : Agent
         foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
         {
             dict[limb.gameObject.name] = Vector3.zero;
-        }
-        return dict;
-    }
-    private static Dictionary<string, Vector3> getVelocities(GameObject body)
-    {
-        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
-        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
-        {
-            dict[limb.gameObject.name] = limb.velocity;
-        }
-        return dict;
-    }
-    private static Dictionary<string, Vector3> getAngularVelocities(GameObject body)
-    {
-        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
-        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
-        {
-            dict[limb.gameObject.name] = limb.angularVelocity;
         }
         return dict;
     }
@@ -159,22 +133,13 @@ public class HumanAgent : Agent
         Vector3 relative_acc = head_rotation * desired_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(relative_acc / 100f, 1f));
         Rigidbody rigidHead = head.gameObject.GetComponent<Rigidbody>();
-        Vector3 avg_acc = Vector3.zero;
-        Vector3 avg_angular_acc = Vector3.zero;
-        for (int i = 0; i < frames; i++)
-        {
-            avg_acc += acceleration[i][head.gameObject.name] / frames;
-            avg_angular_acc += angular_acceleration[i][head.gameObject.name] / frames;
-        }
-        avg_acc /= frames;
-        avg_angular_acc /= frames;
-        Vector3 total_acceleration = avg_acc - Physics.gravity;
+        Vector3 total_acceleration = avg_acceleration.acceleration - Physics.gravity;
         total_acceleration = head_rotation * total_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(total_acceleration / 100f, 1f));
-        Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
+        Vector3 total_angular_acceleration = head_rotation * avg_acceleration.angular_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(total_angular_acceleration / 100f, 1f));
-        Debug.DrawRay(head.position, head.rotation * total_acceleration, Color.red, 0.105f);
-        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration, Color.yellow, 0.105f);
+        Debug.DrawRay(head.position, head.rotation * total_acceleration / 10f, Color.red, 0.005f);
+        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration / 10f, Color.yellow, 0.005f);
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
@@ -250,34 +215,13 @@ public class HumanAgent : Agent
     float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        if (body == null || StepCount % 15 < 14)
+        if (body == null || StepCount % 15 > 0)
         {
             deltaTimeCumulative += Time.fixedDeltaTime;
             return;
         }
         float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
         deltaTimeCumulative = 0;
-        Vector3 massCenter = Vector3.zero;
-        float mass = 0f;
-        avg_velocity = Vector3.zero;
-        int len = 0;
-        int frame = StepCount % frames;
-        foreach (Rigidbody part in body.GetComponentsInChildren<Rigidbody>())
-        {
-            Vector3 acc = (part.velocity - velocity[part.gameObject.name]) / deltaTime;
-            Vector3 angular_acc = (part.angularVelocity - angular_velocity[part.gameObject.name]) / deltaTime;
-            acceleration[frame][part.gameObject.name] = acc;
-            angular_acceleration[frame][part.gameObject.name] = angular_acc;
-            velocity[part.gameObject.name] = part.velocity;
-            angular_velocity[part.gameObject.name] = part.angularVelocity;
-
-
-            len++;
-            avg_velocity += part.velocity * part.mass;
-
-            mass += part.mass;
-        }
-        avg_velocity /= len * mass;
 
         Vector3 direction = transform.rotation * Vector3.forward;
         Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
@@ -285,7 +229,7 @@ public class HumanAgent : Agent
 
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
-        Debug.DrawRay(head.position, corrected_direction, Color.green, 0.105f);
+        Debug.DrawRay(head.position, corrected_direction, Color.green, 0.005f);
         desired_acceleration = corrected_direction - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
@@ -306,7 +250,7 @@ public class HumanAgent : Agent
             if (desired_progress.magnitude > headStart.magnitude)
             {
                 desired_progress = desired_progress - headStart;
-                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan, 0.105f);
+                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan, 0.005f);
                 if (head.position.magnitude < desired_progress.magnitude)
                 {
                     Fall();
@@ -331,7 +275,7 @@ public class HumanAgent : Agent
         reward *= 15;
         AddReward(reward);
         Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
-        Debug.DrawRay(head.position, avg_velocity, Color.green, 0.105f);
+        Debug.DrawRay(head.position, avg_velocity, Color.green, 0.005f);
     }
 
     public void Fall()
