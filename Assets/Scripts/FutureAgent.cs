@@ -279,17 +279,7 @@ public class FutureAgent : Agent
             EndEpisode();
             return;
         }
-        if (futureBody != null)
-        {
-            var oldSpine = agent.body.transform.GetChild((int)BodyPart.Spine);
-            var futureSpine = futureBody.GetChild((int)BodyPart.Spine);
-            futureSpine.SetPositionAndRotation(
-                oldSpine.position,
-                oldSpine.rotation
-            );
-            futureSpine.GetComponent<Rigidbody>().velocity = oldSpine.GetComponent<Rigidbody>().velocity;
-        }
-        if (StepCount % 15 >= 10)
+        else if (agent.StepCount % 15 == 14)
         {
             float difference = 0;
             List<float> observations = new List<float>();
@@ -301,6 +291,16 @@ public class FutureAgent : Agent
             difference /= observations.Count;
             SetReward(-difference);
             Monitor.Log("Future", -difference, MonitorType.slider, agent.transform);
+        }
+        if (futureBody != null)
+        {
+            var oldSpine = agent.body.transform.GetChild((int)BodyPart.Spine);
+            var futureSpine = futureBody.GetChild((int)BodyPart.Spine);
+            futureSpine.SetPositionAndRotation(
+                oldSpine.position,
+                oldSpine.rotation
+            );
+            futureSpine.GetComponent<Rigidbody>().velocity = oldSpine.GetComponent<Rigidbody>().velocity;
         }
     }
 }

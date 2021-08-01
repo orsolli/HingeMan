@@ -173,8 +173,8 @@ public class HumanAgent : Agent
         sensor.AddObservation(Vector3.ClampMagnitude(total_acceleration / 100f, 1f));
         Vector3 total_angular_acceleration = head_rotation * avg_angular_acc;
         sensor.AddObservation(Vector3.ClampMagnitude(total_angular_acceleration / 100f, 1f));
-        Debug.DrawRay(head.position, head.rotation * total_acceleration, Color.red);
-        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration, Color.yellow);
+        Debug.DrawRay(head.position, head.rotation * total_acceleration, Color.red, 0.105f);
+        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration, Color.yellow, 0.105f);
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
@@ -250,7 +250,7 @@ public class HumanAgent : Agent
     float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        if (body == null)
+        if (body == null || StepCount % 15 < 14)
         {
             deltaTimeCumulative += Time.fixedDeltaTime;
             return;
@@ -282,11 +282,10 @@ public class HumanAgent : Agent
         Vector3 direction = transform.rotation * Vector3.forward;
         Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
         direction = (desired_position - body.transform.position).normalized;
-        Debug.DrawRay(head.position, direction, Color.green);
 
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
         Vector3 corrected_direction = (desired_velocity - avg_velocity);
-        float speed_diff = Mathf.Clamp01(corrected_direction.magnitude);
+        Debug.DrawRay(head.position, corrected_direction, Color.green, 0.105f);
         desired_acceleration = corrected_direction - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
@@ -307,7 +306,7 @@ public class HumanAgent : Agent
             if (desired_progress.magnitude > headStart.magnitude)
             {
                 desired_progress = desired_progress - headStart;
-                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan);
+                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan, 0.105f);
                 if (head.position.magnitude < desired_progress.magnitude)
                 {
                     Fall();
@@ -329,10 +328,10 @@ public class HumanAgent : Agent
 
         Monitor.Log("Effort", effort, MonitorType.slider, head);
         reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
-        AddReward(reward);
         reward *= 15;
+        AddReward(reward);
         Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
-        Debug.DrawRay(head.position, avg_velocity, Color.green);
+        Debug.DrawRay(head.position, avg_velocity, Color.green, 0.105f);
     }
 
     public void Fall()
