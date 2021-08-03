@@ -218,8 +218,16 @@ public class HumanAgent : Agent
         if (body == null || StepCount % 15 > 0)
         {
             deltaTimeCumulative += Time.fixedDeltaTime;
+            if (StepCount % 15 == 1)
+            {
+                body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = false;
+                body.transform.Find("LeftFoot").GetComponent<FootSensor>().enabled = false;
+            }
             return;
         }
+        body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = true;
+        body.transform.Find("LeftFoot").GetComponent<FootSensor>().enabled = true;
+
         float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
         deltaTimeCumulative = 0;
 

@@ -12,7 +12,7 @@ public class FootSensor : MonoBehaviour
     }
     public void OnCollisionStay(Collision other)
     {
-        if (other.transform.name.Equals("LeftLeg") || other.transform.name.Equals("RightLeg"))
+        if (other.transform.name.Equals("LeftLeg") || other.transform.name.Equals("RightLeg") || !this.enabled)
             return;
         int sign = Vector3.Dot(other.GetContact(0).point - transform.position, other.impulse) > 0 ? -1 : 1;
         impulse = sign * other.impulse / Time.fixedDeltaTime / 60 + other.relativeVelocity - prevVel;
