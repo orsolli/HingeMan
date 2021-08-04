@@ -7,11 +7,10 @@ public class RewardManager : MonoBehaviour
     HumanAgent[] agents;
     public ComputeShader rewardShader;
     int kernelIndex;
+    ComputeBuffer massBuffer;
     ComputeBuffer velocitiesBuffer;
     ComputeBuffer previous_velocitiesBuffer;
-    ComputeBuffer accelerationsBuffer;
-    ComputeBuffer avg_velocitiesBuffer;
-    ComputeBuffer avg_accelerationsBuffer;
+    ComputeBuffer resultsBuffer;
 
     struct Limb
     {
@@ -23,33 +22,36 @@ public class RewardManager : MonoBehaviour
     void Start()
     {
         agents = agents_parent.GetComponentsInChildren<HumanAgent>();
-        velocitiesBuffer = new ComputeBuffer(agents.Length * 22, 4 * 3 * 2 + 4);
-        previous_velocitiesBuffer = new ComputeBuffer(agents.Length * 22, 4 * 3 * 2 + 4);
-        accelerationsBuffer = new ComputeBuffer(agents.Length * 22, 4 * 3 * 2);
-        avg_velocitiesBuffer = new ComputeBuffer(agents.Length * 22, 4 * 3);
-        avg_accelerationsBuffer = new ComputeBuffer(agents.Length * 22, 4 * 3 * 2);
+        massBuffer = new ComputeBuffer(32, 4);
+        velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2 * 2);
+        previous_velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2 * 2);
+        resultsBuffer = new ComputeBuffer(agents.Length, 4 * 3 * 2 * 2);
         if (rewardShader == null)
             rewardShader = Resources.Load<ComputeShader>("RewardShader");
         kernelIndex = rewardShader.FindKernel("HumanReward");
+        rewardShader.SetBuffer(kernelIndex, "mass", massBuffer);
         rewardShader.SetBuffer(kernelIndex, "velocities", velocitiesBuffer);
         rewardShader.SetBuffer(kernelIndex, "previous_velocities", previous_velocitiesBuffer);
-        rewardShader.SetBuffer(kernelIndex, "accelerations", accelerationsBuffer);
-        rewardShader.SetBuffer(kernelIndex, "avg_velocities", avg_velocitiesBuffer);
-        rewardShader.SetBuffer(kernelIndex, "avg_accelerations", avg_accelerationsBuffer);
-        previous_velocitiesBuffer.SetData(Enumerable.Repeat(new Limb()
+        rewardShader.SetBuffer(kernelIndex, "results", resultsBuffer);
+        previous_velocitiesBuffer.SetData(Enumerable.Repeat(Vector3.zero, 64 * agents.Length).ToArray());
+        float[] masses = new float[32];
+        int index = 0;
+        foreach (Rigidbody limb in agents[0].body.GetComponentsInChildren<Rigidbody>())
         {
-            Velocity = Vector3.zero,
-            Angular_velocity = Vector3.zero,
-            Mass = 1
-        }, 22 * agents.Length).ToArray());
+            masses[index++] = limb.mass;
+        }
+        while (index < 32)
+        {
+            masses[index++] = 0f;
+        }
+        massBuffer.SetData(masses);
     }
     void OnDestroy()
     {
         velocitiesBuffer.Dispose();
         previous_velocitiesBuffer.Dispose();
-        accelerationsBuffer.Dispose();
-        avg_velocitiesBuffer.Dispose();
-        avg_accelerationsBuffer.Dispose();
+        massBuffer.Dispose();
+        resultsBuffer.Dispose();
     }
     float deltaTimeCumulative = 0;
     void FixedUpdate()
@@ -58,31 +60,32 @@ public class RewardManager : MonoBehaviour
         {
             float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
             deltaTimeCumulative = 0;
-            Limb[] vels = new Limb[agents.Length * 22];
+            Vector3[] vels = new Vector3[agents.Length * 64];
             int index = 0;
             foreach (HumanAgent agent in agents)
             {
                 foreach (Rigidbody limb in agent.body.GetComponentsInChildren<Rigidbody>())
                 {
-                    vels[index++] = new Limb()
-                    {
-                        Velocity = limb.velocity,
-                        Angular_velocity = limb.angularVelocity,
-                        Mass = limb.mass
-                    };
+                    vels[index++] = limb.velocity;
+                    vels[index++] = limb.angularVelocity;
+                }
+                while (index % 64 > 0)
+                {
+                    vels[index++] = Vector3.zero;
                 }
             }
             velocitiesBuffer.SetData(vels);
-            rewardShader.SetFloat("deltatime", deltaTime);
-            rewardShader.Dispatch(kernelIndex, agents.Length, 1, 1);
-            Vector3[] avg_velocities = new Vector3[agents.Length];
-            HumanAgent.Acceleration[] avg_accelerations = new HumanAgent.Acceleration[agents.Length];
-            avg_velocitiesBuffer.GetData(avg_velocities);
-            avg_accelerationsBuffer.GetData(avg_accelerations);
+            rewardShader.Dispatch(kernelIndex, 1, 1, agents.Length);
+            Vector3[,] results = new Vector3[agents.Length, 4];
+            resultsBuffer.GetData(results);
             for (int i = 0; i < agents.Length; i++)
             {
-                agents[i].avg_velocity = avg_velocities[i];
-                agents[i].avg_acceleration = avg_accelerations[i];
+                agents[i].avg_velocity = results[i, 0] / (22f * 60f);
+                agents[i].avg_acceleration = new HumanAgent.Acceleration()
+                {
+                    acceleration = results[i, 1] / (22f * 60f * deltaTime),
+                    angular_acceleration = results[i, 3] / (22f * 60f * deltaTime)
+                };
             }
         }
         else
