@@ -1,56 +1,44 @@
-
-struct Limb {
-    float3 Velocity;
-    float3 Angular_velocity;
-    uint Mass;
-};
-struct Accelerations {
-    float3 Acceleration;
-    float3 Angular_Acceleration;
-};
-
+// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel HumanReward
 
-float deltatime;
-RWStructuredBuffer<Limb> velocities;
-RWStructuredBuffer<Limb> previous_velocities;
-RWStructuredBuffer<float3> avg_velocities;
-RWStructuredBuffer<Accelerations> avg_accelerations;
-groupshared Limb avg_velocity[22];
-groupshared Accelerations avg_acceleration[22];
+RWStructuredBuffer<float> mass;
+RWStructuredBuffer<float2x3> velocities;
+RWStructuredBuffer<float2x3> previous_velocities;
+RWStructuredBuffer<float4x3> results;
+groupshared float2x3 avg_velocity[32];
+groupshared float2x3 avg_acceleration[32];
 
-[numthreads(1,22,1)]
+[numthreads(2,32,1)]
 void HumanReward (uint3 id : SV_DispatchThreadID)
 {
-    float flatIndex = id.x * 22 + id.y;
-
-    avg_velocity[id.y].Velocity = velocities[flatIndex].Velocity * velocities[flatIndex].Mass / 22;
-    avg_velocity[id.y].Angular_velocity = velocities[flatIndex].Angular_velocity * velocities[flatIndex].Mass / 22;
-    avg_velocity[id.y].Mass = velocities[flatIndex].Mass;
-
-    avg_acceleration[id.y].Acceleration = (velocities[flatIndex].Velocity - previous_velocities[flatIndex].Velocity) * velocities[flatIndex].Mass / deltatime;
-    avg_acceleration[id.y].Angular_Acceleration = (velocities[flatIndex].Angular_velocity - previous_velocities[flatIndex].Angular_velocity) * velocities[flatIndex].Mass / deltatime;
-
+    uint flatIndex = id.z * 32 + id.y;
+    
+    avg_velocity[id.y][id.x].xyz = mul(velocities[flatIndex][id.x].xyz, mass[id.y]);
+    avg_acceleration[id.y][id.x].xyz = mul(velocities[flatIndex][id.x].xyz - previous_velocities[flatIndex][id.x].xyz, mass[id.y]);
     GroupMemoryBarrierWithGroupSync();
 
     // do reduction in shared mem
-    for(unsigned int s=11; s > 0; s >>= 1) {
-        if (id.y < s) {
-            avg_velocity[id.y].Velocity += avg_velocity[id.y + s].Velocity;
-            avg_velocity[id.y].Angular_velocity += avg_velocity[id.y + s].Angular_velocity;
-            avg_velocity[id.y].Mass += avg_velocity[id.y + s].Mass;
-
-            avg_acceleration[id.y].Acceleration += avg_acceleration[id.y + s].Acceleration;
-            avg_acceleration[id.y].Angular_Acceleration += avg_acceleration[id.y + s].Angular_Acceleration;
-        }
-        GroupMemoryBarrierWithGroupSync();
+    if (id.y < 16) {
+        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 16][id.x].xyz;
+        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 16][id.x].xyz;
+    }
+    if (id.y < 8) {
+        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 8][id.x].xyz;
+        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 8][id.x].xyz;
+    }
+    if (id.y < 4) {
+        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 4][id.x].xyz;
+        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 4][id.x].xyz;
+    }
+    if (id.y < 2) {
+        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 2][id.x].xyz;
+        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 2][id.x].xyz;
     }
 
     // write result for this block to global mem
     if (id.y == 0) {
-        avg_velocities[id.x] = avg_velocity[0].Velocity / avg_velocity[0].Mass;
-        avg_accelerations[id.x].Acceleration = avg_acceleration[0].Acceleration / avg_velocity[0].Mass;
-        avg_accelerations[id.x].Angular_Acceleration = avg_acceleration[0].Angular_Acceleration / avg_velocity[0].Mass;
+        results[id.z][id.x*2].xyz = avg_velocity[0][id.x].xyz + avg_velocity[1][id.x].xyz;
+        results[id.z][id.x*2 + 1].xyz = avg_acceleration[0][id.x].xyz + avg_acceleration[1][id.x].xyz;
     }
-    previous_velocities[flatIndex] = velocities[flatIndex];
+    previous_velocities[flatIndex][id.x].xyz = velocities[flatIndex][id.x].xyz;
 }

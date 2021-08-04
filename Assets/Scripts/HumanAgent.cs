@@ -138,8 +138,8 @@ public class HumanAgent : Agent
         sensor.AddObservation(Vector3.ClampMagnitude(total_acceleration / 100f, 1f));
         Vector3 total_angular_acceleration = head_rotation * avg_acceleration.angular_acceleration;
         sensor.AddObservation(Vector3.ClampMagnitude(total_angular_acceleration / 100f, 1f));
-        Debug.DrawRay(head.position, head.rotation * total_acceleration / 10f, Color.red, 0.005f);
-        Debug.DrawRay(head.position, head.rotation * total_angular_acceleration / 10f, Color.yellow, 0.005f);
+        Debug.DrawRay(transform.position, head.rotation * total_acceleration / 10f, Color.red, 0.005f);
+        Debug.DrawRay(transform.position, head.rotation * total_angular_acceleration, Color.yellow, 0.005f);
 
         Vector3 absRightEye = head.position + head.rotation * rightEye;
         Vector3 absLeftEye = head.position + head.rotation * leftEye;
