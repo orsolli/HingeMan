@@ -266,12 +266,12 @@ public class HumanAgent : Agent
                 }
             }
             float progress = new Vector2(head.localPosition.x, head.localPosition.z).magnitude;
-            if (progress < 0.6
+            if (progress < 0.6 && velLoss > 0.005f
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
             {
                 reward -= 0.00067f;
-                if (StepCount > 75 && progress < 0.6)
+                if (StepCount > 75 && StepCount < 100 && progress < 0.6)
                 {
                     Fall();
                 }

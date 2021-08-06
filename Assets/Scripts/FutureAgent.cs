@@ -258,6 +258,7 @@ public class FutureAgent : Agent
                 spring.targetPosition = targetAction * range + limb.limits.min;
                 limb.spring = spring;
             }
+            Debug.DrawRay(transform.position, transform.position + new Vector3(act[42], act[43], act[44]) * 100f, Color.green, 0.005f);
         }
     }
 
@@ -278,7 +279,7 @@ public class FutureAgent : Agent
             CollectAllObservations(SaveObservation(observations));
             for (int i = 0; i < observations.Count; i++)
             {
-                difference += Mathf.Abs(observations[i] - Mathf.Clamp(action[i], -1, 1));
+                difference += Mathf.Pow(observations[i] - Mathf.Clamp(action[i], -1, 1), 2);
             }
             difference /= observations.Count;
             SetReward(-difference);

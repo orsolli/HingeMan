@@ -5,7 +5,7 @@ public class RewardManager : MonoBehaviour
 {
     public Transform agents_parent;
     HumanAgent[] agents;
-    public ComputeShader rewardShader;
+    ComputeShader rewardShader;
     int kernelIndex;
     ComputeBuffer massBuffer;
     ComputeBuffer velocitiesBuffer;

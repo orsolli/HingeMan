@@ -54,6 +54,10 @@ MonoBehaviour:
   maxSpeed: 10
   startPoses:
   - {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
+  - {fileID: 761727493193945721, guid: d043b31d76fca14f294b7ad1527af9c3, type: 3}
+  - {fileID: 6029527467805006237, guid: 4b9fd27bf2d4b75ffad3a755b5010cf3, type: 3}
+  - {fileID: 3549614786022852210, guid: f0d66a1d1ad97ad69bff7bb91e970b55, type: 3}
+  - {fileID: 8390018882957775547, guid: fbc7e4d9ebe86c41db785ab317965c1e, type: 3}
   rightEye: {x: 0.0321, y: 0, z: 0.08}
   leftEye: {x: -0.0321, y: 0, z: 0.08}
   focusPoint: {x: 0, y: 0, z: 1}
