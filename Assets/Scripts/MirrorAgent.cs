@@ -91,12 +91,12 @@ public class MirrorAgent : Agent
         Quaternion lookAtLeft = Quaternion.LookRotation(focusPoint - absLeftEye, head.rotation * Vector3.up);
         sensor.AddObservation(lookAtLeft);
 
-        Transform rightFoot = body.transform.Find("RightFoot");
+        Transform rightFoot = body.transform.Find("LeftFoot");
         Quaternion rightFoot_rotation = Quaternion.Inverse(rightFoot.rotation).normalized;
         FootSensor rightFootSensor = rightFoot.GetComponent<FootSensor>();
         sensor.AddObservation(Vector3.ClampMagnitude(rightFoot_rotation * rightFootSensor.impulse / 20f, 1f));
 
-        Transform leftFoot = body.transform.Find("LeftFoot");
+        Transform leftFoot = body.transform.Find("RightFoot");
         Quaternion leftFoot_rotation = Quaternion.Inverse(leftFoot.rotation).normalized;
         FootSensor leftFootSensor = leftFoot.GetComponent<FootSensor>();
         sensor.AddObservation(Vector3.ClampMagnitude(leftFoot_rotation * leftFootSensor.impulse / 20f, 1f));
