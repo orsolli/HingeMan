@@ -14,6 +14,7 @@ public class HumanAgent : Agent
     public List<Dictionary<string, Vector3>> startAngularVelocities = new List<Dictionary<string, Vector3>>();
     int poseIndex = 0;
     float rotation_pct = 0;
+    float graceTimer;
     Transform head;
     // Eyes
     public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
@@ -82,6 +83,8 @@ public class HumanAgent : Agent
         foreach (var b in body.GetComponentsInChildren<Rigidbody>())
         {
             b.ResetInertiaTensor();
+            b.velocity = Vector3.zero;
+            b.angularVelocity = Vector3.zero;
         }
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
@@ -265,16 +268,22 @@ public class HumanAgent : Agent
                     return;
                 }
             }
-            float progress = new Vector2(head.localPosition.x, head.localPosition.z).magnitude;
-            if (progress < 0.6 && velLoss > 0.005f
+
+            if (velLoss > 0.005f
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
             {
+                graceTimer += 1;
                 reward -= 0.00067f;
-                if (StepCount > 75 && StepCount < 100 && progress < 0.6)
+                if (graceTimer > 75)
                 {
-                    Fall();
+                    Stop();
+                    return;
                 }
+            }
+            else
+            {
+                graceTimer = 0;
             }
         }
 
@@ -292,6 +301,40 @@ public class HumanAgent : Agent
         EndEpisode();
         Destroy(body);
         CreateBody();
+    }
+
+    bool rightStep = false;
+    public void Stop()
+    {
+        SetReward(-1);
+        EndEpisode();
+
+        Vector3 sv = desired_acceleration + Physics.gravity;
+        var rigidbodies = body.GetComponentsInChildren<Rigidbody>();
+        Vector3 velocity = new Vector3(sv.x, sv.y, sv.z);
+        if (rightStep)
+        {
+            rigidbodies[(int)Hinges.LeftSholder].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftBicep].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftArm].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftElbow].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftPelvis].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftThigh].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftLeg].velocity = velocity;
+            rigidbodies[(int)Hinges.LeftFoot].velocity = velocity;
+        }
+        else
+        {
+            rigidbodies[(int)Hinges.RightPelvis].velocity = velocity;
+            rigidbodies[(int)Hinges.RightThigh].velocity = velocity;
+            rigidbodies[(int)Hinges.RightLeg].velocity = velocity;
+            rigidbodies[(int)Hinges.RightFoot].velocity = velocity;
+            rigidbodies[(int)Hinges.RightSholder].velocity = velocity;
+            rigidbodies[(int)Hinges.RightBicep].velocity = velocity;
+            rigidbodies[(int)Hinges.RightArm].velocity = velocity;
+            rigidbodies[(int)Hinges.RightElbow].velocity = velocity;
+        }
+        rightStep = !rightStep;
     }
 
     public override void OnEpisodeBegin()

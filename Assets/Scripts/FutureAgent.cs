@@ -258,7 +258,8 @@ public class FutureAgent : Agent
                 spring.targetPosition = targetAction * range + limb.limits.min;
                 limb.spring = spring;
             }
-            Debug.DrawRay(transform.position, transform.position + new Vector3(act[42], act[43], act[44]) * 100f, Color.green, 0.005f);
+            var head_rotation = Quaternion.Inverse(futureBody.Find("Head").transform.rotation);
+            Debug.DrawRay(transform.position, transform.position + head_rotation * new Vector3(act[42], act[43], act[44]) * 100f, Color.green, 0.005f);
         }
     }
 
