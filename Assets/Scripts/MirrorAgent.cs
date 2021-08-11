@@ -5,6 +5,7 @@ using Unity.MLAgents.Sensors;
 public class MirrorAgent : Agent
 {
     public HumanAgent agent;
+    float[] mirroredActions;
     enum BodyPart
     {
         Head,
@@ -104,34 +105,7 @@ public class MirrorAgent : Agent
 
     public override void OnActionReceived(float[] act)
     {
-        float difference = 0;
-        float[] actions = agent.GetAction();
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.Head], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.Head], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.NeckNo], -1, 1) + Mathf.Clamp(actions[(int)BodyPart.NeckNo], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.NeckYes], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.NeckYes], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.Spine], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.Spine], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.Tale], -1, 1) + Mathf.Clamp(actions[(int)BodyPart.Tale], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftSholder], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightSholder], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftBicep], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightBicep], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftArm], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightArm], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftElbow], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightElbow], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightPelvis], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftPelvis], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightThigh], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftThigh], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightLeg], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftLeg], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightFoot], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftFoot], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightSholder], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftSholder], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightBicep], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftBicep], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightArm], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftArm], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.RightElbow], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftElbow], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftPelvis], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightPelvis], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftThigh], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightThigh], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftLeg], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightLeg], -1, 1));
-        difference += Mathf.Abs(Mathf.Clamp(act[(int)BodyPart.LeftFoot], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightFoot], -1, 1));
-        difference /= 21;
-        difference /= 2;
-        float rew = 0.18f - Mathf.Pow(difference, 2);
-        SetReward(rew * 0.01f);
-        Monitor.Log("Mirror", rew, MonitorType.slider, agent.transform);
+        mirroredActions = act;
     }
 
     void FixedUpdate()
@@ -139,6 +113,36 @@ public class MirrorAgent : Agent
         if (agent.StepCount < this.StepCount)
         {
             EndEpisode();
+        }
+        else if (StepCount % 15 == 1)
+        {
+            float difference = 0;
+            float[] actions = agent.GetAction();
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.Head], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.Head], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.NeckNo], -1, 1) + Mathf.Clamp(actions[(int)BodyPart.NeckNo], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.NeckYes], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.NeckYes], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.Spine], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.Spine], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.Tale], -1, 1) + Mathf.Clamp(actions[(int)BodyPart.Tale], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftSholder], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightSholder], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftBicep], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightBicep], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftArm], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightArm], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftElbow], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightElbow], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightPelvis], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftPelvis], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightThigh], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftThigh], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightLeg], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftLeg], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightFoot], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftFoot], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightSholder], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftSholder], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightBicep], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftBicep], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightArm], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftArm], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.RightElbow], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.LeftElbow], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftPelvis], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightPelvis], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftThigh], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightThigh], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftLeg], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightLeg], -1, 1));
+            difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.LeftFoot], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.RightFoot], -1, 1));
+            difference /= 21;
+            float rew = Mathf.Pow(difference, 2);
+            SetReward(Mathf.Clamp(agent.reward - rew, -1f, 1f));
+            Monitor.Log("Mirror", -rew, MonitorType.slider, agent.transform);
         }
     }
 }

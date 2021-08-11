@@ -267,6 +267,7 @@ public class FutureAgent : Agent
     {
         if (agent.StepCount < StepCount)
         {
+            action = new float[] { };
             if (futureBody != null)
                 Destroy(futureBody.gameObject);
             SetReward(0);
@@ -278,7 +279,7 @@ public class FutureAgent : Agent
             float difference = 0;
             List<float> observations = new List<float>();
             CollectAllObservations(SaveObservation(observations));
-            for (int i = 0; i < observations.Count; i++)
+            for (int i = 0; i < action.Length; i++)
             {
                 difference += Mathf.Pow(observations[i] - Mathf.Clamp(action[i], -1, 1), 2);
             }

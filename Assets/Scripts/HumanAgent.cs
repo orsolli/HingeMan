@@ -7,6 +7,7 @@ using Unity.MLAgents.Policies;
 public class HumanAgent : Agent
 {
     public GameObject body;
+    public float reward;
     public float maxSpeed = 10f;
     int initialPoseSize;
     public List<GameObject> startPoses = new List<GameObject>();
@@ -244,17 +245,17 @@ public class HumanAgent : Agent
         desired_acceleration = corrected_direction - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
-        float reward = 0.007f;
+        reward = 0.007f;
         if (rotation_pct < 0.001f)
         {
             reward -= avg_velocity.magnitude * 0.667f;
-            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, head);
+            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, transform);
         }
         else if (corrected_direction.sqrMagnitude > 0.001f)
         {
             float velLoss = 1 - (Vector3.Dot(avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
             velLoss = Mathf.Clamp01(velLoss);
-            Monitor.Log("Velocity", -velLoss, MonitorType.slider, head);
+            Monitor.Log("Velocity", -velLoss, MonitorType.slider, transform);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
             Vector3 headStart = transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 50;
             Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
@@ -287,7 +288,7 @@ public class HumanAgent : Agent
             }
         }
 
-        Monitor.Log("Effort", effort, MonitorType.slider, head);
+        Monitor.Log("Effort", effort, MonitorType.slider, transform);
         reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
         reward *= 15;
         AddReward(reward);
