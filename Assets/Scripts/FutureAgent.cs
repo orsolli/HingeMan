@@ -274,7 +274,7 @@ public class FutureAgent : Agent
             EndEpisode();
             return;
         }
-        else if (agent.StepCount % 15 == 0)
+        else if ((agent.StepCount - agent.frameOffset + 1) % 15 == 0)
         {
             float difference = 0;
             List<float> observations = new List<float>();

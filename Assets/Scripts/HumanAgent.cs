@@ -9,6 +9,7 @@ public class HumanAgent : Agent
     public GameObject body;
     public float reward;
     public float maxSpeed = 10f;
+    public int frameOffset = -1;
     int initialPoseSize;
     public List<GameObject> startPoses = new List<GameObject>();
     public List<Dictionary<string, Vector3>> startVelocities = new List<Dictionary<string, Vector3>>();
@@ -110,6 +111,7 @@ public class HumanAgent : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
+        frameOffset = StepCount % 15;
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
         var hinges = body.GetComponentsInChildren<HingeJoint>();
         observe(sensor, hinges[(int)Hinges.Head]);
@@ -219,7 +221,7 @@ public class HumanAgent : Agent
     float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        if (body == null || StepCount % 15 > 0)
+        if (body == null || (StepCount - frameOffset + 1) % 15 > 0)
         {
             deltaTimeCumulative += Time.fixedDeltaTime;
             if (StepCount % 15 == 1)

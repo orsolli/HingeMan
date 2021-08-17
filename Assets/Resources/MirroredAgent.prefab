@@ -72,7 +72,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 150
+  MaxStep: 60
   agent: {fileID: 8833210459262770449}
 --- !u!114 &1506612853033997983
 MonoBehaviour:
@@ -174,7 +174,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 0
+  MaxStep: 240
   agent: {fileID: 8833210459262770449}
 --- !u!1 &8866945953618974232
 GameObject:

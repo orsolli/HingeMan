@@ -114,7 +114,7 @@ public class MirrorAgent : Agent
         {
             EndEpisode();
         }
-        else if (StepCount % 15 == 1)
+        else if ((StepCount - agent.frameOffset + 1) % 15 == 1)
         {
             float difference = 0;
             float[] actions = agent.GetAction();
