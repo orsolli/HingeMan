@@ -11,6 +11,7 @@ public class RewardManager : MonoBehaviour
     ComputeBuffer velocitiesBuffer;
     ComputeBuffer previous_velocitiesBuffer;
     ComputeBuffer resultsBuffer;
+    public float deltaTimeCumulative = 0.007f;
 
     struct Limb
     {
@@ -45,6 +46,7 @@ public class RewardManager : MonoBehaviour
             masses[index++] = 0f;
         }
         massBuffer.SetData(masses);
+        CalculateVelocities();
     }
     void OnDestroy()
     {
@@ -53,13 +55,14 @@ public class RewardManager : MonoBehaviour
         massBuffer.Dispose();
         resultsBuffer.Dispose();
     }
-    float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        if (agents[0].StepCount % 15 == 0)
+        deltaTimeCumulative += Time.fixedDeltaTime;
+    }
+    public void CalculateVelocities()
+    {
+        if (deltaTimeCumulative > 0)
         {
-            float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
-            deltaTimeCumulative = 0;
             Vector3[] vels = new Vector3[agents.Length * 64];
             int index = 0;
             foreach (HumanAgent agent in agents)
@@ -83,14 +86,11 @@ public class RewardManager : MonoBehaviour
                 agents[i].avg_velocity = results[i, 0] / (22f * 60f);
                 agents[i].avg_acceleration = new HumanAgent.Acceleration()
                 {
-                    acceleration = results[i, 1] / (22f * 60f * deltaTime),
-                    angular_acceleration = results[i, 3] / (22f * 60f * deltaTime)
+                    acceleration = results[i, 1] / (22f * 60f * deltaTimeCumulative),
+                    angular_acceleration = results[i, 3] / (22f * 60f * deltaTimeCumulative)
                 };
             }
-        }
-        else
-        {
-            deltaTimeCumulative += Time.fixedDeltaTime;
+            deltaTimeCumulative = 0;
         }
     }
 }

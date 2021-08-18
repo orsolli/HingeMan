@@ -31,6 +31,7 @@ public class HumanAgent : Agent
         public Vector3 angular_acceleration;
     };
     public Acceleration avg_acceleration;
+    RewardManager rewardManager;
     float effort = 0f;
     enum Hinges
     {
@@ -56,8 +57,34 @@ public class HumanAgent : Agent
         LeftLeg,
         LeftFoot
     }
+    enum Limbs
+    {
+        Head,
+        NeckNo,
+        NeckYes,
+        Spine,
+        Tale,
+        Pelvis,
+        LeftSholder,
+        LeftBicep,
+        LeftArm,
+        LeftElbow,
+        RightPelvis,
+        RightThigh,
+        RightLeg,
+        RightFoot,
+        RightSholder,
+        RightBicep,
+        RightArm,
+        RightElbow,
+        LeftPelvis,
+        LeftThigh,
+        LeftLeg,
+        LeftFoot
+    }
     public override void Initialize()
     {
+        rewardManager = GameObject.Find("RewardManager").GetComponent<RewardManager>();
         initialPoseSize = startPoses.Count;
         for (int i = 0; i < initialPoseSize; i++)
         {
@@ -79,6 +106,7 @@ public class HumanAgent : Agent
     }
     private void CreateBody()
     {
+        graceTimer = 0;
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
         body.SetActive(true);
@@ -111,6 +139,10 @@ public class HumanAgent : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
+        if (rewardManager.deltaTimeCumulative > Time.fixedDeltaTime)
+        {
+            rewardManager.CalculateVelocities();
+        }
         frameOffset = StepCount % 15;
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
         var hinges = body.GetComponentsInChildren<HingeJoint>();
@@ -218,12 +250,10 @@ public class HumanAgent : Agent
         }
     }
 
-    float deltaTimeCumulative = 0;
     void FixedUpdate()
     {
-        if (body == null || (StepCount - frameOffset + 1) % 15 > 0)
+        if ((StepCount - frameOffset + 1) % 15 > 0)
         {
-            deltaTimeCumulative += Time.fixedDeltaTime;
             if (StepCount % 15 == 1)
             {
                 body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = false;
@@ -234,8 +264,6 @@ public class HumanAgent : Agent
         body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = true;
         body.transform.Find("LeftFoot").GetComponent<FootSensor>().enabled = true;
 
-        float deltaTime = deltaTimeCumulative + Time.fixedDeltaTime;
-        deltaTimeCumulative = 0;
 
         Vector3 direction = transform.rotation * Vector3.forward;
         Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
@@ -248,6 +276,7 @@ public class HumanAgent : Agent
 
         Monitor.RemoveAllValues(head);
         reward = 0.007f;
+        float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
             reward -= avg_velocity.magnitude * 0.667f;
@@ -255,7 +284,7 @@ public class HumanAgent : Agent
         }
         else if (corrected_direction.sqrMagnitude > 0.001f)
         {
-            float velLoss = 1 - (Vector3.Dot(avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
+            velLoss = 1 - (Vector3.Dot(avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
             velLoss = Mathf.Clamp01(velLoss);
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, transform);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
@@ -272,21 +301,22 @@ public class HumanAgent : Agent
                 }
             }
 
-            if (velLoss > 0.005f
-             && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f
-             && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 0.03f)
+            if (velLoss > 0.99f
+             && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
+             && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
             {
-                graceTimer += 1;
+                graceTimer += 0.105f;
                 reward -= 0.00067f;
-                if (graceTimer > 75)
+                if (graceTimer > 1)
                 {
+                    graceTimer = 0;
                     Stop();
                     return;
                 }
             }
             else
             {
-                graceTimer = 0;
+                graceTimer = Mathf.Max(graceTimer - 0.105f, 0);
             }
         }
 
@@ -309,7 +339,7 @@ public class HumanAgent : Agent
     bool rightStep = false;
     public void Stop()
     {
-        SetReward(-1);
+        SetReward(-0.5f);
         EndEpisode();
 
         Vector3 sv = desired_acceleration + Physics.gravity;
@@ -317,25 +347,27 @@ public class HumanAgent : Agent
         Vector3 velocity = new Vector3(sv.x, sv.y, sv.z);
         if (rightStep)
         {
-            rigidbodies[(int)Hinges.LeftSholder].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftBicep].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftArm].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftElbow].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftPelvis].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftThigh].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftLeg].velocity = velocity;
-            rigidbodies[(int)Hinges.LeftFoot].velocity = velocity;
+            Debug.DrawRay(rigidbodies[(int)Limbs.LeftFoot].position, velocity, Color.magenta, 0.1f);
+            rigidbodies[(int)Limbs.LeftSholder].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftBicep].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftArm].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftElbow].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftPelvis].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftThigh].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftLeg].velocity += velocity;
+            rigidbodies[(int)Limbs.LeftFoot].velocity += new Vector3(sv.x, sv.y + 2, sv.z);
         }
         else
         {
-            rigidbodies[(int)Hinges.RightPelvis].velocity = velocity;
-            rigidbodies[(int)Hinges.RightThigh].velocity = velocity;
-            rigidbodies[(int)Hinges.RightLeg].velocity = velocity;
-            rigidbodies[(int)Hinges.RightFoot].velocity = velocity;
-            rigidbodies[(int)Hinges.RightSholder].velocity = velocity;
-            rigidbodies[(int)Hinges.RightBicep].velocity = velocity;
-            rigidbodies[(int)Hinges.RightArm].velocity = velocity;
-            rigidbodies[(int)Hinges.RightElbow].velocity = velocity;
+            Debug.DrawRay(rigidbodies[(int)Limbs.RightFoot].position, velocity, Color.magenta, 0.1f);
+            rigidbodies[(int)Limbs.RightPelvis].velocity += velocity;
+            rigidbodies[(int)Limbs.RightThigh].velocity += velocity;
+            rigidbodies[(int)Limbs.RightLeg].velocity += velocity;
+            rigidbodies[(int)Limbs.RightFoot].velocity += new Vector3(sv.x, sv.y + 2, sv.z);
+            rigidbodies[(int)Limbs.RightSholder].velocity += velocity;
+            rigidbodies[(int)Limbs.RightBicep].velocity += velocity;
+            rigidbodies[(int)Limbs.RightArm].velocity += velocity;
+            rigidbodies[(int)Limbs.RightElbow].velocity += velocity;
         }
         rightStep = !rightStep;
     }
