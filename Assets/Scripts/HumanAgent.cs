@@ -269,22 +269,24 @@ public class HumanAgent : Agent
         Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
         direction = (desired_position - body.transform.position).normalized;
 
+        Vector3 flat_avg_velocity = new Vector3(avg_velocity.x, avg_velocity.y * 0.1f, avg_velocity.z);
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
-        Vector3 corrected_direction = (desired_velocity - avg_velocity);
+        Vector3 corrected_direction = (desired_velocity - flat_avg_velocity);
         Debug.DrawRay(head.position, corrected_direction, Color.green, 0.005f);
         desired_acceleration = corrected_direction - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
-        reward = 0.007f;
+        reward = 0.005f;
         float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
-            reward -= avg_velocity.magnitude * 0.667f;
-            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, transform);
+            reward -= flat_avg_velocity.magnitude * 0.667f;
+            Monitor.Log("Velocity", -flat_avg_velocity.magnitude, MonitorType.slider, transform);
         }
-        else if (corrected_direction.sqrMagnitude > 0.001f)
+        else if (corrected_direction.sqrMagnitude > 0.01f)
         {
-            velLoss = 1 - (Vector3.Dot(avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
+            velLoss = 1 - (Vector3.Dot(flat_avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(flat_avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
+            velLoss *= 0.7f;
             velLoss = Mathf.Clamp01(velLoss);
             Monitor.Log("Velocity", -velLoss, MonitorType.slider, transform);
             reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
@@ -301,7 +303,7 @@ public class HumanAgent : Agent
                 }
             }
 
-            if (velLoss > 0.99f
+            if (velLoss > 0.7f
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
             {
@@ -325,13 +327,14 @@ public class HumanAgent : Agent
         reward *= 15;
         AddReward(reward);
         Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
-        Debug.DrawRay(head.position, avg_velocity, Color.green, 0.005f);
+        Debug.DrawRay(head.position, flat_avg_velocity, Color.green, 0.005f);
     }
 
     public void Fall()
     {
         SetReward(-1);
         EndEpisode();
+        body.SetActive(false);
         Destroy(body);
         CreateBody();
     }
@@ -344,7 +347,11 @@ public class HumanAgent : Agent
 
         Vector3 sv = desired_acceleration + Physics.gravity;
         var rigidbodies = body.GetComponentsInChildren<Rigidbody>();
-        Vector3 velocity = new Vector3(sv.x, sv.y, sv.z);
+        Vector3 velocity = new Vector3(sv.x, sv.y + 2, sv.z);
+        rigidbodies[(int)Limbs.Head].velocity += velocity;
+        rigidbodies[(int)Limbs.NeckNo].velocity += velocity;
+        rigidbodies[(int)Limbs.NeckYes].velocity += velocity;
+        rigidbodies[(int)Limbs.Spine].velocity += velocity;
         if (rightStep)
         {
             Debug.DrawRay(rigidbodies[(int)Limbs.LeftFoot].position, velocity, Color.magenta, 0.1f);
