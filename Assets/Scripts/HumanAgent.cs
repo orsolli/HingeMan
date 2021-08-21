@@ -200,8 +200,10 @@ public class HumanAgent : Agent
     private void act(float force, float angle, HingeJoint limb)
     {
         float springAction = (Mathf.Clamp(force, -1f, 1f) + 1f) / 2;
-        effort = -Mathf.Clamp01(Mathf.Pow(springAction, 2));
-        AddReward(effort * 0.00166f);
+        effort -= Mathf.Clamp01(Mathf.Pow(springAction, 2));
+        effort -= Mathf.Clamp01(Mathf.Pow(0.00001f, 1 - Mathf.Pow(angle, 2)));
+        effort /= 2;
+        AddReward(effort * 0.00008f);
         float targetAction = (Mathf.Clamp(angle, -1f, 1f) + 1f) / 2;
         float range = limb.limits.max - limb.limits.min;
         JointSpring spring = limb.spring;
@@ -211,6 +213,7 @@ public class HumanAgent : Agent
     }
     public override void OnActionReceived(float[] actions)
     {
+        effort = 0;
         HingeJoint[] limb = body.GetComponentsInChildren<HingeJoint>();
         act(actions[(int)Hinges.Head * 2], actions[(int)Hinges.Head * 2 + 1], limb[(int)Hinges.Head]);
         act(actions[(int)Hinges.NeckNo * 2], actions[(int)Hinges.NeckNo * 2 + 1], limb[(int)Hinges.NeckNo]);
@@ -322,8 +325,8 @@ public class HumanAgent : Agent
             }
         }
 
-        Monitor.Log("Effort", effort, MonitorType.slider, transform);
-        reward = Mathf.Clamp(reward + effort * 0.00166f, -0.06667f, 0.06667f);
+        Monitor.Log("Effort", effort / 21, MonitorType.slider, transform);
+        reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
         reward *= 15;
         AddReward(reward);
         Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
@@ -345,36 +348,38 @@ public class HumanAgent : Agent
         SetReward(-0.5f);
         EndEpisode();
 
-        Vector3 sv = desired_acceleration + Physics.gravity;
+        Vector3 sv = desired_acceleration + Physics.gravity * 0.8f;
         var rigidbodies = body.GetComponentsInChildren<Rigidbody>();
-        Vector3 velocity = new Vector3(sv.x, sv.y + 2, sv.z);
-        rigidbodies[(int)Limbs.Head].velocity += velocity;
-        rigidbodies[(int)Limbs.NeckNo].velocity += velocity;
-        rigidbodies[(int)Limbs.NeckYes].velocity += velocity;
-        rigidbodies[(int)Limbs.Spine].velocity += velocity;
+        Vector3 velocity = new Vector3(sv.x, sv.y, sv.z);
+        rigidbodies[(int)Limbs.Head].velocity = velocity;
+        rigidbodies[(int)Limbs.NeckNo].velocity = velocity;
+        rigidbodies[(int)Limbs.NeckYes].velocity = velocity;
+        rigidbodies[(int)Limbs.Spine].velocity = velocity;
         if (rightStep)
         {
+            rigidbodies[(int)Limbs.RightFoot].velocity = Vector3.zero;
             Debug.DrawRay(rigidbodies[(int)Limbs.LeftFoot].position, velocity, Color.magenta, 0.1f);
-            rigidbodies[(int)Limbs.LeftSholder].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftBicep].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftArm].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftElbow].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftPelvis].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftThigh].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftLeg].velocity += velocity;
-            rigidbodies[(int)Limbs.LeftFoot].velocity += new Vector3(sv.x, sv.y + 2, sv.z);
+            rigidbodies[(int)Limbs.LeftSholder].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftBicep].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftArm].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftElbow].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftPelvis].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftThigh].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftLeg].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.LeftFoot].velocity = 2 * velocity;
         }
         else
         {
+            rigidbodies[(int)Limbs.LeftFoot].velocity = Vector3.zero;
             Debug.DrawRay(rigidbodies[(int)Limbs.RightFoot].position, velocity, Color.magenta, 0.1f);
-            rigidbodies[(int)Limbs.RightPelvis].velocity += velocity;
-            rigidbodies[(int)Limbs.RightThigh].velocity += velocity;
-            rigidbodies[(int)Limbs.RightLeg].velocity += velocity;
-            rigidbodies[(int)Limbs.RightFoot].velocity += new Vector3(sv.x, sv.y + 2, sv.z);
-            rigidbodies[(int)Limbs.RightSholder].velocity += velocity;
-            rigidbodies[(int)Limbs.RightBicep].velocity += velocity;
-            rigidbodies[(int)Limbs.RightArm].velocity += velocity;
-            rigidbodies[(int)Limbs.RightElbow].velocity += velocity;
+            rigidbodies[(int)Limbs.RightPelvis].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightThigh].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightLeg].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightFoot].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightSholder].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightBicep].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightArm].velocity = 2 * velocity;
+            rigidbodies[(int)Limbs.RightElbow].velocity = 2 * velocity;
         }
         rightStep = !rightStep;
     }
