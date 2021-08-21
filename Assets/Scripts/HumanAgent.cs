@@ -306,6 +306,15 @@ public class HumanAgent : Agent
                 }
             }
 
+            Vector3 avg_feet_position = (
+                body.transform.Find("RightFoot").localPosition +
+                body.transform.Find("LeftFoot").localPosition
+            ) / 2;
+
+            float progress = 1 - (Vector3.Dot(avg_feet_position, direction) / direction.magnitude - Vector3.Cross(avg_feet_position, direction).magnitude / direction.sqrMagnitude);
+            Monitor.Log("Progress", -progress, MonitorType.slider, transform);
+            reward -= Mathf.Pow(progress, 2) * 0.00067f;
+
             if (velLoss > 0.7f
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
