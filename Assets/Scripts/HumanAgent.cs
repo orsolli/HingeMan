@@ -106,7 +106,7 @@ public class HumanAgent : Agent
     }
     private void CreateBody()
     {
-        graceTimer = 0;
+        graceTimer = 0.5f;
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
         body.SetActive(true);
@@ -279,20 +279,20 @@ public class HumanAgent : Agent
         desired_acceleration = corrected_direction - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
-        reward = 0.005f;
+        reward = 0.00167f;
         float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
-            reward -= flat_avg_velocity.magnitude * 0.667f;
+            reward += 0.065f - flat_avg_velocity.magnitude * 0.0667f;
             Monitor.Log("Velocity", -flat_avg_velocity.magnitude, MonitorType.slider, transform);
         }
         else if (corrected_direction.sqrMagnitude > 0.01f)
         {
-            velLoss = 1 - (Vector3.Dot(flat_avg_velocity, corrected_direction) / corrected_direction.magnitude - Vector3.Cross(flat_avg_velocity, corrected_direction).magnitude / corrected_direction.sqrMagnitude);
-            velLoss *= 0.7f;
-            velLoss = Mathf.Clamp01(velLoss);
-            Monitor.Log("Velocity", -velLoss, MonitorType.slider, transform);
-            reward -= Mathf.Pow(velLoss, 2) * 0.00667f;
+            velLoss = (flat_avg_velocity - corrected_direction).magnitude / corrected_direction.magnitude;
+            velLoss *= 0.5f;
+            velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
+            Monitor.Log("Velocity:" + velLoss.ToString("0.00000"), -velLoss, MonitorType.slider, head);
+            reward -= velLoss * 0.00667f;
             Vector3 headStart = transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 50;
             Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
             if (desired_progress.magnitude > headStart.magnitude)
@@ -306,16 +306,7 @@ public class HumanAgent : Agent
                 }
             }
 
-            Vector3 avg_feet_position = (
-                body.transform.Find("RightFoot").localPosition +
-                body.transform.Find("LeftFoot").localPosition
-            ) / 2;
-
-            float progress = 1 - (Vector3.Dot(avg_feet_position, direction) / direction.magnitude - Vector3.Cross(avg_feet_position, direction).magnitude / direction.sqrMagnitude);
-            Monitor.Log("Progress", -progress, MonitorType.slider, transform);
-            reward -= Mathf.Pow(progress, 2) * 0.00067f;
-
-            if (velLoss > 0.7f
+            if (Mathf.Abs(velLoss - 0.249f) < 0.002f
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
             {
@@ -390,6 +381,7 @@ public class HumanAgent : Agent
             rigidbodies[(int)Limbs.RightArm].velocity = 2 * velocity;
             rigidbodies[(int)Limbs.RightElbow].velocity = 2 * velocity;
         }
+        rewardManager.CalculateVelocities();
         rightStep = !rightStep;
     }
 
