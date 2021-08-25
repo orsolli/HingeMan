@@ -2,43 +2,47 @@
 #pragma kernel HumanReward
 
 RWStructuredBuffer<float> mass;
-RWStructuredBuffer<float2x3> velocities;
-RWStructuredBuffer<float2x3> previous_velocities;
-RWStructuredBuffer<float4x3> results;
+RWStructuredBuffer<float3> velocities;
+RWStructuredBuffer<float3> previous_velocities;
+RWStructuredBuffer<float3x4> results;
 groupshared float2x3 avg_velocity[32];
 groupshared float2x3 avg_acceleration[32];
 
 [numthreads(2,32,1)]
 void HumanReward (uint3 id : SV_DispatchThreadID)
 {
-    uint flatIndex = id.z * 32 + id.y;
+    uint flatIndex = id.z * 32 + id.y * 2 + id.x;
     
-    avg_velocity[id.y][id.x].xyz = mul(velocities[flatIndex][id.x].xyz, mass[id.y]);
-    avg_acceleration[id.y][id.x].xyz = mul(velocities[flatIndex][id.x].xyz - previous_velocities[flatIndex][id.x].xyz, mass[id.y]);
+    avg_velocity[id.y][id.x] = mul(velocities[flatIndex], mass[id.y]);
+    avg_acceleration[id.y][id.x] = mul(velocities[flatIndex] - previous_velocities[flatIndex], mass[id.y]);
     GroupMemoryBarrierWithGroupSync();
 
     // do reduction in shared mem
     if (id.y < 16) {
-        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 16][id.x].xyz;
-        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 16][id.x].xyz;
+        avg_velocity[id.y][id.x] += avg_velocity[id.y + 16][id.x];
+        avg_acceleration[id.y][id.x] += avg_acceleration[id.y + 16][id.x];
     }
     if (id.y < 8) {
-        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 8][id.x].xyz;
-        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 8][id.x].xyz;
+        avg_velocity[id.y][id.x] += avg_velocity[id.y + 8][id.x];
+        avg_acceleration[id.y][id.x] += avg_acceleration[id.y + 8][id.x];
     }
     if (id.y < 4) {
-        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 4][id.x].xyz;
-        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 4][id.x].xyz;
+        avg_velocity[id.y][id.x] += avg_velocity[id.y + 4][id.x];
+        avg_acceleration[id.y][id.x] += avg_acceleration[id.y + 4][id.x];
     }
     if (id.y < 2) {
-        avg_velocity[id.y][id.x].xyz += avg_velocity[id.y + 2][id.x].xyz;
-        avg_acceleration[id.y][id.x].xyz += avg_acceleration[id.y + 2][id.x].xyz;
+        avg_velocity[id.y][id.x] += avg_velocity[id.y + 2][id.x];
+        avg_acceleration[id.y][id.x] += avg_acceleration[id.y + 2][id.x];
     }
 
     // write result for this block to global mem
     if (id.y == 0) {
-        results[id.z][id.x*2].xyz = avg_velocity[0][id.x].xyz + avg_velocity[1][id.x].xyz;
-        results[id.z][id.x*2 + 1].xyz = avg_acceleration[0][id.x].xyz + avg_acceleration[1][id.x].xyz;
+        results[id.z][0][id.x*2] = avg_velocity[0][id.x].x + avg_velocity[1][id.x].x;
+        results[id.z][1][id.x*2] = avg_velocity[0][id.x].y + avg_velocity[1][id.x].y;
+        results[id.z][2][id.x*2] = avg_velocity[0][id.x].z + avg_velocity[1][id.x].z;
+        results[id.z][0][id.x*2 + 1] = avg_acceleration[0][id.x].x + avg_acceleration[1][id.x].x;
+        results[id.z][1][id.x*2 + 1] = avg_acceleration[0][id.x].y + avg_acceleration[1][id.x].y;
+        results[id.z][2][id.x*2 + 1] = avg_acceleration[0][id.x].z + avg_acceleration[1][id.x].z;
     }
-    previous_velocities[flatIndex][id.x].xyz = velocities[flatIndex][id.x].xyz;
+    previous_velocities[flatIndex] = velocities[flatIndex];
 }

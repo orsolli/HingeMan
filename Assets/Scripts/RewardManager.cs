@@ -24,9 +24,9 @@ public class RewardManager : MonoBehaviour
     {
         agents = agents_parent.GetComponentsInChildren<HumanAgent>();
         massBuffer = new ComputeBuffer(32, 4);
-        velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2 * 2);
-        previous_velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2 * 2);
-        resultsBuffer = new ComputeBuffer(agents.Length, 4 * 3 * 2 * 2);
+        velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2);
+        previous_velocitiesBuffer = new ComputeBuffer(agents.Length * 32, 4 * 3 * 2);
+        resultsBuffer = new ComputeBuffer(agents.Length, 4 * 3 * 2 * 2); // byte4 * vector2 * (vel+acc) * (lin+ang)
         if (rewardShader == null)
             rewardShader = Resources.Load<ComputeShader>("RewardShader");
         kernelIndex = rewardShader.FindKernel("HumanReward");
@@ -34,7 +34,7 @@ public class RewardManager : MonoBehaviour
         rewardShader.SetBuffer(kernelIndex, "velocities", velocitiesBuffer);
         rewardShader.SetBuffer(kernelIndex, "previous_velocities", previous_velocitiesBuffer);
         rewardShader.SetBuffer(kernelIndex, "results", resultsBuffer);
-        previous_velocitiesBuffer.SetData(Enumerable.Repeat(Vector3.zero, 64 * agents.Length).ToArray());
+        previous_velocitiesBuffer.SetData(Enumerable.Repeat(0f, 64 * agents.Length * 3).ToArray());
         float[] masses = new float[32];
         int index = 0;
         foreach (Rigidbody limb in agents[0].body.GetComponentsInChildren<Rigidbody>())
