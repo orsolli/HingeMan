@@ -3327,7 +3327,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1674604354
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3341,6 +3341,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agents_parent: {fileID: 1074456541}
+  deltaTimeCumulative: 0.007
 --- !u!4 &1674604355
 Transform:
   m_ObjectHideFlags: 0

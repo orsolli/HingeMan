@@ -23,6 +23,8 @@ public class HumanAgent : Agent
     public Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
     public Vector3 focusPoint = Vector3.forward;
     public Vector3 desired_acceleration = -Physics.gravity;
+    public Vector3 previous_velocity = Vector3.zero;
+    public Vector3 angular_velocity = Vector3.zero;
     public Vector3 avg_velocity;
 
     public struct Acceleration
@@ -31,7 +33,6 @@ public class HumanAgent : Agent
         public Vector3 angular_acceleration;
     };
     public Acceleration avg_acceleration;
-    RewardManager rewardManager;
     float effort = 0f;
     enum Hinges
     {
@@ -84,7 +85,6 @@ public class HumanAgent : Agent
     }
     public override void Initialize()
     {
-        rewardManager = GameObject.Find("RewardManager").GetComponent<RewardManager>();
         initialPoseSize = startPoses.Count;
         for (int i = 0; i < initialPoseSize; i++)
         {
@@ -119,6 +119,14 @@ public class HumanAgent : Agent
         rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
+        avg_velocity = Vector3.zero;
+        avg_acceleration = new HumanAgent.Acceleration()
+        {
+            acceleration = Vector3.zero,
+            angular_acceleration = Vector3.zero
+        };
+        previous_velocity = Vector3.zero;
+        angular_velocity = Vector3.zero;
     }
 
     private static Dictionary<string, Vector3> getZeros(GameObject body)
@@ -139,10 +147,6 @@ public class HumanAgent : Agent
     }
     public override void CollectObservations(VectorSensor sensor)
     {
-        if (rewardManager.deltaTimeCumulative > Time.fixedDeltaTime)
-        {
-            rewardManager.CalculateVelocities();
-        }
         frameOffset = StepCount % 15;
         Quaternion head_rotation = Quaternion.Inverse(head.rotation).normalized;
         var hinges = body.GetComponentsInChildren<HingeJoint>();
@@ -267,28 +271,43 @@ public class HumanAgent : Agent
         body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = true;
         body.transform.Find("LeftFoot").GetComponent<FootSensor>().enabled = true;
 
+        Vector3 new_velocity = Vector3.zero;
+        Vector3 new_angular_velocity = Vector3.zero;
+        foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
+        {
+            new_velocity += limb.velocity * limb.mass;
+            new_angular_velocity += limb.angularVelocity * limb.mass;
+        }
+        new_velocity /= 22 * 60;
+        new_angular_velocity /= 22 * 60;
+        avg_acceleration = new Acceleration()
+        {
+            acceleration = (new_velocity - avg_velocity) / Time.fixedDeltaTime,
+            angular_acceleration = (new_angular_velocity - angular_velocity) / Time.fixedDeltaTime
+        };
+        Debug.DrawRay(body.transform.Find("Head").position, new_velocity * 10f, Color.blue, 0.05f);
+        Debug.DrawRay(body.transform.Find("Head").position + new_velocity * 10f, avg_acceleration.acceleration, Color.red, 0.05f);
+        avg_velocity = new_velocity;
+        angular_velocity = new_angular_velocity;
 
         Vector3 direction = transform.rotation * Vector3.forward;
-        Vector3 desired_position = direction * (1 + body.transform.position.magnitude);
-        direction = (desired_position - body.transform.position).normalized;
 
         Vector3 flat_avg_velocity = new Vector3(avg_velocity.x, avg_velocity.y * 0.1f, avg_velocity.z);
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
-        Vector3 corrected_direction = (desired_velocity - flat_avg_velocity);
-        Debug.DrawRay(head.position, corrected_direction, Color.green, 0.005f);
-        desired_acceleration = corrected_direction - Physics.gravity;
+        Debug.DrawRay(head.position, desired_velocity, Color.green, 0.005f);
+        desired_acceleration = desired_velocity - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
         reward = 0.00167f;
         float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
-            reward += 0.065f - flat_avg_velocity.magnitude * 0.0667f;
+            reward -= flat_avg_velocity.magnitude * 0.0667f;
             Monitor.Log("Velocity", -flat_avg_velocity.magnitude, MonitorType.slider, transform);
         }
-        else if (corrected_direction.sqrMagnitude > 0.01f)
+        else if (desired_velocity.sqrMagnitude > 0.01f)
         {
-            velLoss = (flat_avg_velocity - corrected_direction).magnitude / corrected_direction.magnitude;
+            velLoss = (flat_avg_velocity - desired_velocity).magnitude / desired_velocity.magnitude;
             velLoss *= 0.5f;
             velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
             Monitor.Log("Velocity:" + velLoss.ToString("0.00000"), -velLoss, MonitorType.slider, head);
@@ -330,7 +349,7 @@ public class HumanAgent : Agent
         reward *= 15;
         AddReward(reward);
         Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
-        Debug.DrawRay(head.position, flat_avg_velocity, Color.green, 0.005f);
+        //Debug.DrawRay(head.position, avg_velocity * 100f, Color.blue, 0.005f);
     }
 
     public void Fall()
@@ -381,7 +400,6 @@ public class HumanAgent : Agent
             rigidbodies[(int)Limbs.RightArm].velocity = 2 * velocity;
             rigidbodies[(int)Limbs.RightElbow].velocity = 2 * velocity;
         }
-        rewardManager.CalculateVelocities();
         rightStep = !rightStep;
     }
 
