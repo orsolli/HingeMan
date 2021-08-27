@@ -204,10 +204,10 @@ public class HumanAgent : Agent
     private void act(float force, float angle, HingeJoint limb)
     {
         float springAction = (Mathf.Clamp(force, -1f, 1f) + 1f) / 2;
-        effort -= Mathf.Clamp01(Mathf.Pow(springAction, 2));
-        effort -= Mathf.Clamp01(Mathf.Pow(0.00001f, 1 - Mathf.Pow(angle, 2)));
-        effort /= 2;
-        AddReward(effort * 0.00008f);
+        effort += Mathf.Clamp01(Mathf.Pow(springAction, 2)) / 2;
+        float mass = limb.transform.GetComponent<Rigidbody>().mass +
+                     limb.connectedBody.mass;
+        effort += Mathf.Clamp01(Mathf.Pow(0.00001f, 1 - Mathf.Pow(angle, 2))) / 2;
         float targetAction = (Mathf.Clamp(angle, -1f, 1f) + 1f) / 2;
         float range = limb.limits.max - limb.limits.min;
         JointSpring spring = limb.spring;
@@ -252,7 +252,6 @@ public class HumanAgent : Agent
         }
         else
         {
-            SetReward(-0.5f);
             focusPoint = blindFocus(head);
         }
     }
@@ -298,11 +297,11 @@ public class HumanAgent : Agent
         desired_acceleration = desired_velocity - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
-        reward = 0.00167f;
+        reward = 0.25f;
         float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
-            reward -= flat_avg_velocity.magnitude * 0.0667f;
+            reward -= flat_avg_velocity.magnitude;
             Monitor.Log("Velocity", -flat_avg_velocity.magnitude, MonitorType.slider, transform);
         }
         else if (desired_velocity.sqrMagnitude > 0.01f)
@@ -310,8 +309,8 @@ public class HumanAgent : Agent
             velLoss = (flat_avg_velocity - desired_velocity).magnitude / desired_velocity.magnitude;
             velLoss *= 0.5f;
             velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
-            Monitor.Log("Velocity:" + velLoss.ToString("0.00000"), -velLoss, MonitorType.slider, head);
-            reward -= velLoss * 0.00667f;
+            Monitor.Log("Velocity:" + velLoss.ToString("0.0000"), -velLoss, MonitorType.slider, head);
+            reward -= velLoss;
             Vector3 headStart = transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 50;
             Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
             if (desired_progress.magnitude > headStart.magnitude)
@@ -330,7 +329,8 @@ public class HumanAgent : Agent
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
             {
                 graceTimer += 0.105f;
-                reward -= 0.00067f;
+                if (graceTimer > 0.2f)
+                    reward -= 0.01f;
                 if (graceTimer > 1)
                 {
                     graceTimer = 0;
@@ -344,11 +344,11 @@ public class HumanAgent : Agent
             }
         }
 
-        Monitor.Log("Effort", effort / 21, MonitorType.slider, transform);
-        reward = Mathf.Clamp(reward, -0.06667f, 0.06667f);
-        reward *= 15;
+        Monitor.Log("Effort", -effort / 21, MonitorType.slider, transform);
+        reward -= effort * 0.01f;
+        reward = Mathf.Clamp(reward, -1, 1);
         AddReward(reward);
-        Monitor.Log(reward.ToString("0.000000"), reward * 10, MonitorType.slider, head);
+        Monitor.Log(reward.ToString("0.0000"), reward, MonitorType.slider, head);
         //Debug.DrawRay(head.position, avg_velocity * 100f, Color.blue, 0.005f);
     }
 
