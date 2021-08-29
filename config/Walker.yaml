@@ -28,30 +28,3 @@ default:
       strength: 0.045
       gamma: 0.8
       encoding_size: 64
-
-Future:
-  trainer: ppo
-  batch_size: 5120
-  beta: 5.0e-3
-  buffer_size: 512000
-  epsilon: 0.1
-  hidden_units: 64
-  lambd: 0.9
-  learning_rate: 1.0e-4
-  learning_rate_schedule: linear
-  max_steps: 3.0e8
-  memory_size: 64
-  normalize: false
-  num_epoch: 10
-  num_layers: 2
-  time_horizon: 1
-  sequence_length: 64
-  summary_freq: 10240
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.8

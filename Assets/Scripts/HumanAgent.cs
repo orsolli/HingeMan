@@ -291,7 +291,6 @@ public class HumanAgent : Agent
 
         Vector3 direction = transform.rotation * Vector3.forward;
 
-        Vector3 flat_avg_velocity = new Vector3(avg_velocity.x, avg_velocity.y * 0.1f, avg_velocity.z);
         Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
         Debug.DrawRay(head.position, desired_velocity, Color.green, 0.005f);
         desired_acceleration = desired_velocity - Physics.gravity;
@@ -301,12 +300,12 @@ public class HumanAgent : Agent
         float velLoss = 0f;
         if (rotation_pct < 0.001f)
         {
-            reward -= flat_avg_velocity.magnitude;
-            Monitor.Log("Velocity", -flat_avg_velocity.magnitude, MonitorType.slider, transform);
+            reward -= avg_velocity.magnitude;
+            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, transform);
         }
         else if (desired_velocity.sqrMagnitude > 0.01f)
         {
-            velLoss = (flat_avg_velocity - desired_velocity).magnitude / desired_velocity.magnitude;
+            velLoss = (avg_velocity - desired_velocity).magnitude / desired_velocity.magnitude;
             velLoss *= 0.5f;
             velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
             Monitor.Log("Velocity:" + velLoss.ToString("0.0000"), -velLoss, MonitorType.slider, head);
@@ -328,9 +327,8 @@ public class HumanAgent : Agent
              && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
              && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
             {
+                reward -= 0.1f * graceTimer;
                 graceTimer += 0.105f;
-                if (graceTimer > 0.2f)
-                    reward -= 0.01f;
                 if (graceTimer > 1)
                 {
                     graceTimer = 0;
