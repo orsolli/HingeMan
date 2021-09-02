@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 
 public class MirrorAgent : Agent
 {
     public HumanAgent agent;
-    float[] mirroredActions;
+    ActionSegment<float> mirroredActions;
     enum BodyPart
     {
         Head,
@@ -103,9 +104,9 @@ public class MirrorAgent : Agent
         sensor.AddObservation(Vector3.ClampMagnitude(leftFoot_rotation * leftFootSensor.impulse / 20f, 1f));
     }
 
-    public override void OnActionReceived(float[] act)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
     {
-        mirroredActions = act;
+        mirroredActions = actionBuffers.ContinuousActions;
     }
 
     void FixedUpdate()
@@ -114,10 +115,10 @@ public class MirrorAgent : Agent
         {
             EndEpisode();
         }
-        else if (mirroredActions != null && (StepCount - agent.frameOffset + 1) % 15 == 1)
+        else if ((StepCount - agent.frameOffset + 1) % 15 == 1)
         {
             float difference = 0;
-            float[] actions = agent.GetAction();
+            ActionSegment<float> actions = agent.GetStoredActionBuffers().ContinuousActions;
             difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.Head], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.Head], -1, 1));
             difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.NeckNo], -1, 1) + Mathf.Clamp(actions[(int)BodyPart.NeckNo], -1, 1));
             difference += Mathf.Abs(Mathf.Clamp(mirroredActions[(int)BodyPart.NeckYes], -1, 1) - Mathf.Clamp(actions[(int)BodyPart.NeckYes], -1, 1));
@@ -142,10 +143,7 @@ public class MirrorAgent : Agent
             difference /= 21;
             float rew = Mathf.Pow(difference, 2);
             Monitor.Log("Mirror", -rew, MonitorType.slider, agent.transform);
-            float factor = 1f;
-            if (rew > 0.001f)
-                factor = Mathf.Clamp01(Mathf.Pow(agent.reward, 2) / Mathf.Pow(3 * rew, 2));
-            SetReward(agent.reward * factor);
+            SetReward(Mathf.Clamp01(agent.reward - rew));
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
-using Unity.MLAgents.Policies;
 
 public class HumanAgent : Agent
 {
@@ -15,7 +15,7 @@ public class HumanAgent : Agent
     public List<Dictionary<string, Vector3>> startVelocities = new List<Dictionary<string, Vector3>>();
     public List<Dictionary<string, Vector3>> startAngularVelocities = new List<Dictionary<string, Vector3>>();
     int poseIndex = 0;
-    float rotation_pct = 0;
+    float speedFactor = 0;
     float graceTimer;
     Transform head;
     // Eyes
@@ -116,7 +116,7 @@ public class HumanAgent : Agent
             b.velocity = Vector3.zero;
             b.angularVelocity = Vector3.zero;
         }
-        rotation_pct = ((360 + transform.eulerAngles.y) % 360) / 360;
+        //speedFactor = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
         focusPoint = blindFocus(head);
         avg_velocity = Vector3.zero;
@@ -215,8 +215,9 @@ public class HumanAgent : Agent
         spring.targetPosition = targetAction * range + limb.limits.min;
         limb.spring = spring;
     }
-    public override void OnActionReceived(float[] actions)
+    public override void OnActionReceived(ActionBuffers actionBuffers)
     {
+        ActionSegment<float> actions = actionBuffers.ContinuousActions;
         effort = 0;
         HingeJoint[] limb = body.GetComponentsInChildren<HingeJoint>();
         act(actions[(int)Hinges.Head * 2], actions[(int)Hinges.Head * 2 + 1], limb[(int)Hinges.Head]);
@@ -291,16 +292,17 @@ public class HumanAgent : Agent
 
         Vector3 direction = transform.rotation * Vector3.forward;
 
-        Vector3 desired_velocity = direction * Mathf.Pow(rotation_pct, 2) * maxSpeed;
+        Vector3 desired_velocity = direction * speedFactor * maxSpeed;
         Debug.DrawRay(head.position, desired_velocity, Color.green, 0.005f);
         desired_acceleration = desired_velocity - Physics.gravity;
 
         Monitor.RemoveAllValues(head);
-        reward = 0.25f;
+        reward = 0.2f;
         float velLoss = 0f;
-        if (rotation_pct < 0.001f)
+        if (speedFactor < 0.001f)
         {
-            reward -= avg_velocity.magnitude;
+            reward += speedFactor;
+            reward -= Mathf.Pow(Mathf.Clamp01(avg_velocity.magnitude * 0.5f), 2);
             Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, transform);
         }
         else if (desired_velocity.sqrMagnitude > 0.01f)
@@ -310,7 +312,7 @@ public class HumanAgent : Agent
             velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
             Monitor.Log("Velocity:" + velLoss.ToString("0.0000"), -velLoss, MonitorType.slider, head);
             reward -= velLoss;
-            Vector3 headStart = transform.position.normalized * Mathf.Pow(rotation_pct, 2) * 50;
+            Vector3 headStart = transform.position.normalized * speedFactor * 50;
             Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
             if (desired_progress.magnitude > headStart.magnitude)
             {
@@ -324,16 +326,20 @@ public class HumanAgent : Agent
             }
 
             if (Mathf.Abs(velLoss - 0.249f) < 0.002f
-             && body.transform.Find("RightFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f
-             && body.transform.Find("LeftFoot").GetComponent<Rigidbody>().velocity.magnitude < 1f)
+             && Mathf.Abs(body.transform.Find("RightThigh").GetComponent<HingeJoint>().angle
+              - body.transform.Find("LeftThigh").GetComponent<HingeJoint>().angle) < 10f)
             {
-                reward -= 0.1f * graceTimer;
-                graceTimer += 0.105f;
-                if (graceTimer > 1)
+                if (Mathf.Abs(body.transform.Find("RightThigh").GetComponent<HingeJoint>().spring.targetPosition
+                  - body.transform.Find("LeftThigh").GetComponent<HingeJoint>().spring.targetPosition) < 20f)
                 {
-                    graceTimer = 0;
-                    Stop();
-                    return;
+                    reward -= 0.1f;
+                    graceTimer += 0.105f;
+                    if (graceTimer > 1)
+                    {
+                        graceTimer = 0;
+                        Stop();
+                        return;
+                    }
                 }
             }
             else
@@ -341,8 +347,8 @@ public class HumanAgent : Agent
                 graceTimer = Mathf.Max(graceTimer - 0.105f, 0);
             }
         }
-
-        Monitor.Log("Effort", -effort / 21, MonitorType.slider, transform);
+        effort /= 21;
+        Monitor.Log("Effort", -effort, MonitorType.slider, transform);
         reward -= effort * 0.01f;
         reward = Mathf.Clamp(reward, -1, 1);
         AddReward(reward);
@@ -404,6 +410,7 @@ public class HumanAgent : Agent
     public override void OnEpisodeBegin()
     {
         focusPoint = blindFocus(head);
+        speedFactor = Academy.Instance.EnvironmentParameters.GetWithDefault("speed", 1f);
     }
 
     public static Vector3 blindFocus(Transform head)

@@ -73,8 +73,9 @@ crashlytics-build.properties
 
 # ML
 *.nn
+*.onnx
 /[Aa]ssets/ML-Agents
 /[Aa]ssets/ML-Agents.meta
 /models
-summaries/*.json
-summaries/*.csv
+/summaries
+/results

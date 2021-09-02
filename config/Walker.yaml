@@ -1,30 +1,99 @@
-default:
-  trainer: ppo
-  batch_size: 2048
-  beta: 5.0e-3
-  buffer_size: 20480
-  epsilon: 0.2
-  hidden_units: 128
-  lambd: 0.95
-  learning_rate: 15e-5
-  learning_rate_schedule: linear
-  max_steps: 4.0e8
-  memory_size: 64
-  normalize: false
-  num_epoch: 4
-  num_layers: 3
-  time_horizon: 16
-  sequence_length: 64
-  summary_freq: 20480
-  use_recurrent: false
-  vis_encode_type: simple
-  keep_checkpoints: 2
-  checkpoint_interval: 2e6
-  reward_signals:
-    extrinsic:
-      strength: 1.0
-      gamma: 0.9
-    curiosity:
-      strength: 0.045
-      gamma: 0.8
-      encoding_size: 64
+env_settings:
+  num_envs: 10
+  seed: 42
+
+engine_settings:
+  width: 800
+  height: 600
+  quality_level: 3
+  time_scale: 10
+  target_frame_rate: -1
+  no_graphics: false
+
+behaviors:
+  Human:
+    trainer_type: ppo
+
+    hyperparameters:
+      batch_size: 2048
+      buffer_size: 20480
+      learning_rate: 15e-5
+      learning_rate_schedule: linear
+
+      # PPO-specific hyperparameters
+      beta: 5.0e-3
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 4
+
+    network_settings:
+      vis_encode_type: simple
+      normalize: false
+      hidden_units: 128
+      num_layers: 3
+      memory:
+        sequence_length: 64
+        memory_size: 64
+        time_horizon: 16
+        use_recurrent: false
+
+    max_steps: 4.0e8
+    summary_freq: 20480
+    keep_checkpoints: 2
+    checkpoint_interval: 2000000
+
+    reward_signals:
+      extrinsic:
+        strength: 1.0
+        gamma: 0.9
+
+# Add this section
+environment_parameters:
+  speed:
+    curriculum:
+      - name: Stand
+        completion_criteria:
+          measure: reward
+          behavior: Human
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 3.0 # ~94% á 3.2=0.2*240/15
+        value: 0.0
+      - name: Walk
+        completion_criteria:
+          measure: reward
+          behavior: Human
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 1.7 # ~53%
+        value: 0.1
+      - name: Spread
+        completion_criteria:
+          measure: reward
+          behavior: Human
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 2.5 #  ~78%
+        value:
+          sampler_type: uniform
+          sampler_parameters:
+            min_value: 0.0
+            max_value: 0.5
+      - name: Jog
+        completion_criteria:
+          measure: reward
+          behavior: Human
+          signal_smoothing: true
+          min_lesson_length: 100
+          threshold: 2.5 #  ~78%
+        value:
+          sampler_type: uniform
+          sampler_parameters:
+            min_value: 0.0
+            max_value: 0.7
+      - name: Run
+        value:
+          sampler_type: uniform
+          sampler_parameters:
+            min_value: 0.0
+            max_value: 1.0
