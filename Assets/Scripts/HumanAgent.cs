@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Actuators;
@@ -16,7 +16,6 @@ public class HumanAgent : Agent
     public List<Dictionary<string, Vector3>> startAngularVelocities = new List<Dictionary<string, Vector3>>();
     int poseIndex = 0;
     float speedFactor = 0;
-    float graceTimer;
     Transform head;
     // Eyes
     public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
@@ -106,7 +105,6 @@ public class HumanAgent : Agent
     }
     private void CreateBody()
     {
-        graceTimer = 0.5f;
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
         body.SetActive(true);
@@ -290,63 +288,22 @@ public class HumanAgent : Agent
         avg_velocity = new_velocity;
         angular_velocity = new_angular_velocity;
 
-        Vector3 direction = transform.rotation * Vector3.forward;
-
-        Vector3 desired_velocity = direction * speedFactor * maxSpeed;
-        Debug.DrawRay(head.position, desired_velocity, Color.green, 0.005f);
-        desired_acceleration = desired_velocity - Physics.gravity;
-
         Monitor.RemoveAllValues(head);
-        reward = 0.2f;
-        float velLoss = 0f;
-        if (speedFactor < 0.001f)
-        {
-            reward += speedFactor;
-            reward -= Mathf.Pow(Mathf.Clamp01(avg_velocity.magnitude * 0.5f), 2);
-            Monitor.Log("Velocity", -avg_velocity.magnitude, MonitorType.slider, transform);
-        }
-        else if (desired_velocity.sqrMagnitude > 0.01f)
-        {
-            velLoss = (avg_velocity - desired_velocity).magnitude / desired_velocity.magnitude;
-            velLoss *= 0.5f;
-            velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
-            Monitor.Log("Velocity:" + velLoss.ToString("0.0000"), -velLoss, MonitorType.slider, head);
-            reward -= velLoss;
-            Vector3 headStart = transform.position.normalized * speedFactor * 50;
-            Vector3 desired_progress = transform.position + desired_velocity * StepCount * Time.fixedDeltaTime;
-            if (desired_progress.magnitude > headStart.magnitude)
-            {
-                desired_progress = desired_progress - headStart;
-                Debug.DrawRay(Vector3.zero, desired_progress, Color.cyan, 0.005f);
-                if (head.position.magnitude < desired_progress.magnitude)
-                {
-                    Fall();
-                    return;
-                }
-            }
 
-            if (Mathf.Abs(velLoss - 0.249f) < 0.002f
-             && Mathf.Abs(body.transform.Find("RightThigh").GetComponent<HingeJoint>().angle
-              - body.transform.Find("LeftThigh").GetComponent<HingeJoint>().angle) < 10f)
-            {
-                if (Mathf.Abs(body.transform.Find("RightThigh").GetComponent<HingeJoint>().spring.targetPosition
-                  - body.transform.Find("LeftThigh").GetComponent<HingeJoint>().spring.targetPosition) < 20f)
-                {
-                    reward -= 0.1f;
-                    graceTimer += 0.105f;
-                    if (graceTimer > 1)
-                    {
-                        graceTimer = 0;
-                        Stop();
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                graceTimer = Mathf.Max(graceTimer - 0.105f, 0);
-            }
-        }
+        reward = 0.25f;
+
+        float accLoss = ((avg_acceleration.acceleration - Physics.gravity) - desired_acceleration).magnitude / Mathf.Max(desired_acceleration.magnitude, 1f);
+        accLoss *= 0.5f;
+        accLoss = Mathf.Pow(Mathf.Clamp01(accLoss), 2);
+        Monitor.Log("Acceleration:" + accLoss.ToString("0.0000"), -accLoss, MonitorType.slider, head);
+        reward -= accLoss;
+        Vector3 desired_velocity = desired_acceleration + Physics.gravity;
+        float velLoss = (Vector3.ClampMagnitude(avg_velocity, 0.1f) - desired_velocity * 0.1f).magnitude / Mathf.Max(desired_velocity.magnitude, 0.1f);
+        velLoss *= 0.5f;
+        velLoss = Mathf.Pow(Mathf.Clamp01(velLoss), 2);
+        Monitor.Log("Velocity:" + velLoss.ToString("0.0000"), -velLoss, MonitorType.slider, head);
+        reward -= velLoss;
+
         effort /= 21;
         Monitor.Log("Effort", -effort, MonitorType.slider, transform);
         reward -= effort * 0.01f;
@@ -358,7 +315,7 @@ public class HumanAgent : Agent
 
     public void Fall()
     {
-        SetReward(-1);
+        SetReward(0);
         EndEpisode();
         body.SetActive(false);
         Destroy(body);
@@ -368,7 +325,6 @@ public class HumanAgent : Agent
     bool rightStep = false;
     public void Stop()
     {
-        SetReward(-0.5f);
         EndEpisode();
 
         Vector3 sv = desired_acceleration + Physics.gravity * 0.8f;
@@ -410,7 +366,11 @@ public class HumanAgent : Agent
     public override void OnEpisodeBegin()
     {
         focusPoint = blindFocus(head);
-        speedFactor = Academy.Instance.EnvironmentParameters.GetWithDefault("speed", 1f);
+        speedFactor = Academy.Instance.EnvironmentParameters.GetWithDefault("speed", 0f);
+        Vector3 direction = transform.rotation * Vector3.forward;
+        Vector3 desired_velocity = direction * speedFactor * maxSpeed;
+        Debug.DrawRay(head.position, desired_velocity, Color.green, 0.005f);
+        desired_acceleration = desired_velocity - Physics.gravity;
     }
 
     public static Vector3 blindFocus(Transform head)
