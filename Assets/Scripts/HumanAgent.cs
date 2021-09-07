@@ -111,8 +111,8 @@ public class HumanAgent : Agent
         foreach (var b in body.GetComponentsInChildren<Rigidbody>())
         {
             b.ResetInertiaTensor();
-            b.velocity = Vector3.zero;
-            b.angularVelocity = Vector3.zero;
+            b.velocity = Random.insideUnitSphere * 5f;
+            b.angularVelocity = Random.insideUnitSphere * 5f;
         }
         //speedFactor = ((360 + transform.eulerAngles.y) % 360) / 360;
         head = body.transform.Find("Head");
