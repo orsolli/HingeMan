@@ -56,8 +56,6 @@ MonoBehaviour:
   frameOffset: -1
   startPoses:
   - {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-  - {fileID: 6163739686233816003, guid: 72ae5d9b0c64c364daf6d9e8e7d83ae6, type: 3}
-  - {fileID: 6163739686233816003, guid: ab20dd9fac6e65139b9ebc4bca52ca36, type: 3}
   rightEye: {x: 0.0321, y: 0, z: 0.08}
   leftEye: {x: -0.0321, y: 0, z: 0.08}
   focusPoint: {x: 0, y: 0, z: 1}
@@ -159,22 +157,6 @@ PrefabInstance:
     - target: {fileID: 1110473415607914512, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3371281828749839254, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.119999774
-      objectReference: {fileID: 0}
-    - target: {fileID: 3371489926243587520, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.00000037252914
-      objectReference: {fileID: 0}
-    - target: {fileID: 3373087221378080090, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.119999774
-      objectReference: {fileID: 0}
-    - target: {fileID: 3373140729097687516, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: -0.0000003725292
       objectReference: {fileID: 0}
     - target: {fileID: 7657408782149363483, guid: f96e0655b932ec0aba2a581fda827242, type: 3}
       propertyPath: m_Name

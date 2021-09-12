@@ -277,11 +277,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8865624957900639325, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_Layer
@@ -1143,11 +1143,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8865624957900639325, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_Layer
@@ -1433,7 +1433,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1441,7 +1441,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1663,11 +1663,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8865624957900639325, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_Layer
@@ -2515,57 +2515,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 22
       objectReference: {fileID: 0}
-    - target: {fileID: 5161271326638082505, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.20000006
-      objectReference: {fileID: 0}
-    - target: {fileID: 5161429082940877459, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.y
-      value: -0.9999979
-      objectReference: {fileID: 0}
-    - target: {fileID: 5161445656464749217, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.2500002
-      objectReference: {fileID: 0}
-    - target: {fileID: 5161453250191837555, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: -0.5000005
-      objectReference: {fileID: 0}
-    - target: {fileID: 5161482566924822037, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.1200001
-      objectReference: {fileID: 0}
-    - target: {fileID: 5161718234534157413, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: -0.20000006
-      objectReference: {fileID: 0}
-    - target: {fileID: 5163141406721846927, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.y
-      value: -0.99999946
-      objectReference: {fileID: 0}
-    - target: {fileID: 5163254236142535343, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.5000005
-      objectReference: {fileID: 0}
-    - target: {fileID: 5163349463181918487, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: -0.2500002
-      objectReference: {fileID: 0}
-    - target: {fileID: 5163353946270970073, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_ConnectedAnchor.x
-      value: 0.1200001
-      objectReference: {fileID: 0}
     - target: {fileID: 5639238335395146190, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_Layer
       value: 22
       objectReference: {fileID: 0}
     - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8865624957900639325, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_Layer
@@ -4225,17 +4185,9 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
-    - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5640912054285392180, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8863950681201523879, guid: 302c8080f4d0796919ea8df6a2fef2e0, type: 3}
       propertyPath: m_LocalPosition.z
