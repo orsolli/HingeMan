@@ -51,6 +51,7 @@ MonoBehaviour:
   hasUpgradedFromAgentParameters: 1
   MaxStep: 240
   body: {fileID: 0}
+  mirror: {fileID: 0}
   reward: 0
   maxSpeed: 10
   frameOffset: -1
@@ -90,8 +91,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 65
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 131
+    NumStackedVectorObservations: 3
     m_ActionSpec:
       m_NumContinuousActions: 42
       BranchSizes: 

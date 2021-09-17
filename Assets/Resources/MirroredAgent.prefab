@@ -26,8 +26,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5639238335395146190}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8866945953618974235}
@@ -60,8 +60,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 65
-    NumStackedVectorObservations: 1
+    VectorObservationSize: 131
+    NumStackedVectorObservations: 3
     m_ActionSpec:
       m_NumContinuousActions: 42
       BranchSizes: 
@@ -93,6 +93,19 @@ MonoBehaviour:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
   MaxStep: 240
+  body: {fileID: 0}
+  mirror: {fileID: 0}
+  reward: 0
+  maxSpeed: 10
+  frameOffset: -1
+  startPoses: []
+  rightEye: {x: 0.0321, y: 0, z: 0.08}
+  leftEye: {x: -0.0321, y: 0, z: 0.08}
+  focusPoint: {x: 0, y: 0, z: 1}
+  desired_acceleration: {x: -0, y: 9.81, z: -0}
+  previous_velocity: {x: 0, y: 0, z: 0}
+  angular_velocity: {x: 0, y: 0, z: 0}
+  avg_velocity: {x: 0, y: 0, z: 0}
   agent: {fileID: 8833210459262770449}
 --- !u!1 &8866945953618974232
 GameObject:
@@ -180,6 +193,10 @@ PrefabInstance:
     - target: {fileID: 4130262422953336, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114954219882740942, guid: a67bd14dff991420db9c74a841c4536b, type: 3}
+      propertyPath: mirror
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a67bd14dff991420db9c74a841c4536b, type: 3}

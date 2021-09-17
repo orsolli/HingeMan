@@ -1,12 +1,12 @@
 env_settings:
-  num_envs: 10
+  num_envs: 6
   seed: 42
 
 engine_settings:
   width: 800
   height: 600
   quality_level: 3
-  time_scale: 10
+  time_scale: 20
   target_frame_rate: -1
   no_graphics: false
 
@@ -16,13 +16,13 @@ behaviors:
 
     hyperparameters:
       batch_size: 2048
-      buffer_size: 20480
+      buffer_size: 204800
       learning_rate: 15e-5
       learning_rate_schedule: linear
 
       # PPO-specific hyperparameters
       beta: 5.0e-3
-      epsilon: 0.2
+      epsilon: 0.15
       lambd: 0.95
       num_epoch: 4
 
@@ -38,14 +38,14 @@ behaviors:
         use_recurrent: false
 
     max_steps: 4.0e8
-    summary_freq: 20480
+    summary_freq: 204800
     keep_checkpoints: 2
     checkpoint_interval: 2000000
 
     reward_signals:
       extrinsic:
         strength: 1.0
-        gamma: 0.9
+        gamma: 0.95
 
 # Add this section
 environment_parameters:

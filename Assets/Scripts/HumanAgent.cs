@@ -7,6 +7,7 @@ using Unity.MLAgents.Sensors;
 public class HumanAgent : Agent
 {
     public GameObject body;
+    public Transform mirror;
     public float reward;
     public float maxSpeed = 10f;
     public int frameOffset = -1;
@@ -16,7 +17,7 @@ public class HumanAgent : Agent
     public List<Dictionary<string, Vector3>> startAngularVelocities = new List<Dictionary<string, Vector3>>();
     int poseIndex = 0;
     float speedFactor = 0;
-    Transform head;
+    protected Transform head;
     // Eyes
     public Vector3 rightEye = new Vector3(0.0321f, 0f, 0.08f);
     public Vector3 leftEye = new Vector3(-0.0321f, 0f, 0.08f);
@@ -33,7 +34,7 @@ public class HumanAgent : Agent
     };
     public Acceleration avg_acceleration;
     float effort = 0f;
-    enum Hinges
+    public enum Hinges
     {
         Head,
         NeckNo,
@@ -57,7 +58,7 @@ public class HumanAgent : Agent
         LeftLeg,
         LeftFoot
     }
-    enum Limbs
+    public enum Limbs
     {
         Head,
         NeckNo,
@@ -82,7 +83,7 @@ public class HumanAgent : Agent
         LeftLeg,
         LeftFoot
     }
-    public override void Initialize()
+    void Start()
     {
         initialPoseSize = startPoses.Count;
         for (int i = 0; i < initialPoseSize; i++)
@@ -103,7 +104,7 @@ public class HumanAgent : Agent
         }
         CreateBody();
     }
-    private void CreateBody()
+    protected virtual void CreateBody()
     {
         poseIndex = (poseIndex + 1) % startPoses.Count;
         body = Instantiate(startPoses[poseIndex], transform);
@@ -197,6 +198,30 @@ public class HumanAgent : Agent
         Quaternion leftFoot_rotation = Quaternion.Inverse(leftFoot.rotation).normalized;
         FootSensor leftFootSensor = leftFoot.GetComponent<FootSensor>();
         sensor.AddObservation(Vector3.ClampMagnitude(leftFoot_rotation * leftFootSensor.impulse / 20f, 1f));
+
+        var limbs = body.GetComponentsInChildren<Rigidbody>();
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.Head].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.NeckNo].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.NeckYes].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.Spine].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.Tale].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.Pelvis].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftSholder].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftBicep].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftArm].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftElbow].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightPelvis].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightThigh].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightLeg].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightFoot].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightSholder].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightBicep].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightArm].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.RightElbow].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftPelvis].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftThigh].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftLeg].velocity / 2000f, 1f));
+        sensor.AddObservation(Vector3.ClampMagnitude(limbs[(int)Limbs.LeftFoot].velocity / 2000f, 1f));
     }
 
     private void act(float force, float angle, HingeJoint limb)
@@ -269,6 +294,7 @@ public class HumanAgent : Agent
         body.transform.Find("RightFoot").GetComponent<FootSensor>().enabled = true;
         body.transform.Find("LeftFoot").GetComponent<FootSensor>().enabled = true;
 
+
         Vector3 new_velocity = Vector3.zero;
         Vector3 new_angular_velocity = Vector3.zero;
         foreach (Rigidbody limb in body.GetComponentsInChildren<Rigidbody>())
@@ -288,6 +314,7 @@ public class HumanAgent : Agent
         avg_velocity = new_velocity;
         angular_velocity = new_angular_velocity;
 
+        Monitor.Log("Remove this", 0, MonitorType.slider, head);
         Monitor.RemoveAllValues(head);
 
         reward = 0.25f;
@@ -315,7 +342,7 @@ public class HumanAgent : Agent
 
     public void Fall()
     {
-        SetReward(0);
+        AddReward(-0.125f);
         EndEpisode();
         body.SetActive(false);
         Destroy(body);
@@ -376,5 +403,78 @@ public class HumanAgent : Agent
     public static Vector3 blindFocus(Transform head)
     {
         return head.position + head.rotation * Vector3.forward * 1000;
+    }
+
+    private void actuateClone()
+    {
+        var body_rotation = body.transform.GetChild((int)Limbs.Pelvis).localRotation;
+        body_rotation = Quaternion.Euler(body_rotation.eulerAngles.x, body_rotation.eulerAngles.y, body_rotation.eulerAngles.z);
+        mirror.GetChild((int)Limbs.Pelvis).localRotation = body_rotation;
+        mirror.GetChild((int)Limbs.Pelvis).localPosition = body.transform.GetChild((int)Limbs.Pelvis).localPosition;
+        HingeJoint[] hinges = body.GetComponentsInChildren<HingeJoint>();
+        HingeJoint[] mirrorHinges = mirror.GetComponentsInChildren<HingeJoint>();
+        var spring = mirrorHinges[(int)Hinges.Head].spring;
+        spring.targetPosition = hinges[(int)Hinges.Head].angle;
+        mirrorHinges[(int)Hinges.Head].spring = spring;
+        spring = mirrorHinges[(int)Hinges.NeckNo].spring;
+        spring.targetPosition = hinges[(int)Hinges.NeckNo].angle;
+        mirrorHinges[(int)Hinges.NeckNo].spring = spring;
+        spring = mirrorHinges[(int)Hinges.NeckYes].spring;
+        spring.targetPosition = hinges[(int)Hinges.NeckYes].angle;
+        mirrorHinges[(int)Hinges.NeckYes].spring = spring;
+        spring = mirrorHinges[(int)Hinges.Spine].spring;
+        spring.targetPosition = hinges[(int)Hinges.Spine].angle;
+        mirrorHinges[(int)Hinges.Spine].spring = spring;
+        spring = mirrorHinges[(int)Hinges.Tale].spring;
+        spring.targetPosition = hinges[(int)Hinges.Tale].angle;
+        mirrorHinges[(int)Hinges.Tale].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightSholder].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightSholder].angle;
+        mirrorHinges[(int)Hinges.RightSholder].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightBicep].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightBicep].angle;
+        mirrorHinges[(int)Hinges.RightBicep].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightArm].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightArm].angle;
+        mirrorHinges[(int)Hinges.RightArm].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightElbow].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightElbow].angle;
+        mirrorHinges[(int)Hinges.RightElbow].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftPelvis].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftPelvis].angle;
+        mirrorHinges[(int)Hinges.LeftPelvis].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftThigh].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftThigh].angle;
+        mirrorHinges[(int)Hinges.LeftThigh].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftLeg].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftLeg].angle;
+        mirrorHinges[(int)Hinges.LeftLeg].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftFoot].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftFoot].angle;
+        mirrorHinges[(int)Hinges.LeftFoot].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftSholder].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftSholder].angle;
+        mirrorHinges[(int)Hinges.LeftSholder].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftBicep].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftBicep].angle;
+        mirrorHinges[(int)Hinges.LeftBicep].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftArm].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftArm].angle;
+        mirrorHinges[(int)Hinges.LeftArm].spring = spring;
+        spring = mirrorHinges[(int)Hinges.LeftElbow].spring;
+        spring.targetPosition = hinges[(int)Hinges.LeftElbow].angle;
+        mirrorHinges[(int)Hinges.LeftElbow].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightPelvis].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightPelvis].angle;
+        mirrorHinges[(int)Hinges.RightPelvis].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightThigh].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightThigh].angle;
+        mirrorHinges[(int)Hinges.RightThigh].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightLeg].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightLeg].angle;
+        mirrorHinges[(int)Hinges.RightLeg].spring = spring;
+        spring = mirrorHinges[(int)Hinges.RightFoot].spring;
+        spring.targetPosition = hinges[(int)Hinges.RightFoot].angle;
+        mirrorHinges[(int)Hinges.RightFoot].spring = spring;
     }
 }
